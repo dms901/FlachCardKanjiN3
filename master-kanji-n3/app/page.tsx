@@ -723,7 +723,6 @@ export default function Home() {
                     </div>
                   )}
 
-                  {/* HANYA BAGIAN INI YANG DIUBAH */}
                   <div
                     className="
                       text-[clamp(90px,28vw,180px)]
