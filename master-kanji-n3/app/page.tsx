@@ -723,9 +723,19 @@ export default function Home() {
                     </div>
                   )}
 
-                  <div className="text-[150px] sm:text-[180px] leading-none font-medium select-none transition-transform duration-300 hover:scale-105">
-                    {currentKanji.k}
-                  </div>
+                  <div
+  className="
+    text-[clamp(90px,28vw,180px)]
+    leading-none
+    font-medium
+    select-none
+    transition-transform
+    duration-300
+    hover:scale-105
+  "
+>
+  {currentKanji.k}
+</div>
 
                   <p className="mt-10 text-xs text-gray-400 tracking-widest uppercase">
                     Ketuk untuk melihat jawaban
