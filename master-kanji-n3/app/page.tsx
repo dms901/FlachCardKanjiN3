@@ -51,7 +51,13 @@ export default function Home() {
 
   const nextCard = () => { setIsFlipped(false); setCardIndex((prev) => (prev + 1) % currentCards.length) }
   const prevCard = () => { setIsFlipped(false); setCardIndex((prev) => (prev - 1 + currentCards.length) % currentCards.length) }
-  const shuffle = () => { setIsFlipped(false); setCardIndex(Math.floor(Math.random() * currentCards.length)) }
+  const shuffle = () => {
+  setIsFlipped(false)
+  const card = document.querySelector('.perspective-1000')
+  card?.classList.add('animate-shuffle')
+  setTimeout(() => card?.classList.remove('animate-shuffle'), 400)
+  setCardIndex(Math.floor(Math.random() * currentCards.length))
+}
   const toggleMastered = () => {
     const id = `${part}-${cardIndex}`
     setMastered(prev => prev.includes(id)? prev.filter(i => i!== id) : [...prev, id])
