@@ -16,8 +16,9 @@ export default function Home() {
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login')
 
   const [part, setPart] = useState(() => {
-  return Object.keys(kanjiData)[0] || ''
-})
+    return Object.keys(kanjiData)[0] || ''
+  })
+
   const [cardIndex, setCardIndex] = useState(0)
   const [isFlipped, setIsFlipped] = useState(false)
   const [mastered, setMastered] = useState<string[]>([])
@@ -25,8 +26,15 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [showCollection, setShowCollection] = useState(false)
-const allParts = kanjiData as Record<string, any[]>
-const currentCards = allParts[part] || []
+
+  // MENU BAGIAN
+  const [showParts, setShowParts] = useState(false)
+
+  // ANIMASI GANTI BAGIAN
+  const [changingPart, setChangingPart] = useState(false)
+
+  const allParts = kanjiData as Record<string, any[]>
+  const currentCards = allParts[part] || []
 
   const currentKanji = currentCards[cardIndex]
 
@@ -36,7 +44,9 @@ const currentCards = allParts[part] || []
 
   const progress =
     currentCards.length > 0
-      ? (mastered.filter((m) => m.startsWith(`${part}-`)).length /
+      ? (mastered.filter((m) =>
+          m.startsWith(`${part}-`)
+        ).length /
           currentCards.length) *
         100
       : 0
@@ -214,14 +224,28 @@ const currentCards = allParts[part] || []
 
   /*
   |--------------------------------------------------------------------------
-  | CHANGE PART
+  | CHANGE PART + ANIMATION
   |--------------------------------------------------------------------------
   */
 
   const changePart = (newPart: string) => {
-    setPart(newPart)
-    setCardIndex(0)
-    setIsFlipped(false)
+    if (newPart === part) {
+      setShowParts(false)
+      return
+    }
+
+    setShowParts(false)
+    setChangingPart(true)
+
+    setTimeout(() => {
+      setPart(newPart)
+      setCardIndex(0)
+      setIsFlipped(false)
+
+      setTimeout(() => {
+        setChangingPart(false)
+      }, 60)
+    }, 220)
   }
 
   /*
@@ -280,8 +304,9 @@ const currentCards = allParts[part] || []
   if (loading) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-[#f7f8fc]">
-        <div className="text-center">
+        <div className="text-center animate-pulse">
           <div className="w-10 h-10 border-4 border-gray-200 border-t-black rounded-full animate-spin mx-auto mb-4" />
+
           <p className="text-sm text-gray-500">
             Memuat Master Kanji...
           </p>
@@ -300,9 +325,11 @@ const currentCards = allParts[part] || []
     return (
       <main className="min-h-screen bg-[#f7f8fc] flex items-center justify-center px-5 py-10">
         <div className="w-full max-w-md">
+
           <div className="bg-white rounded-[28px] shadow-xl shadow-black/5 p-7 sm:p-9 border border-gray-100">
 
             <div className="text-center mb-8">
+
               <div className="w-16 h-16 bg-black text-white rounded-2xl flex items-center justify-center text-3xl font-bold mx-auto mb-5 shadow-lg">
                 漢
               </div>
@@ -314,6 +341,7 @@ const currentCards = allParts[part] || []
               <p className="text-sm text-gray-500 mt-2">
                 Belajar kanji dengan flashcard
               </p>
+
             </div>
 
             <form onSubmit={handleAuth} className="space-y-4">
@@ -363,6 +391,7 @@ const currentCards = allParts[part] || []
                     ? 'Masuk'
                     : 'Buat Akun'}
               </button>
+
             </form>
 
             <button
@@ -385,6 +414,7 @@ const currentCards = allParts[part] || []
           <p className="text-center text-xs text-gray-400 mt-6">
             Master Kanji • N3
           </p>
+
         </div>
       </main>
     )
@@ -405,27 +435,202 @@ const currentCards = allParts[part] || []
 
         <header className="flex items-center justify-between mb-6">
 
-          <div>
-            <p className="text-[10px] tracking-[0.2em] font-bold text-gray-400 mb-1">
+          {/* CUSTOM PART MENU */}
+
+          <div className="relative">
+
+            <p className="text-[10px] tracking-[0.2em] font-bold text-gray-400 mb-2">
               MASTER KANJI
             </p>
 
-            <select
-              value={part}
-              onChange={(e) => changePart(e.target.value)}
-              className="bg-transparent text-xl font-bold outline-none cursor-pointer appearance-none pr-5"
+            <button
+              onClick={() => setShowParts(!showParts)}
+              className="group flex items-center gap-3 bg-white border border-gray-200 rounded-2xl px-4 py-2.5 shadow-sm hover:shadow-md hover:border-gray-300 active:scale-[0.98] transition-all"
             >
-              {Object.keys(kanjiData).map((p) => (
-                <option key={p} value={p}>
-                  Bagian {p.replace('part', '')}
-                </option>
-              ))}
-            </select>
+
+              <div className="w-9 h-9 rounded-xl bg-black text-white flex items-center justify-center text-sm font-bold">
+                {part.replace('part', '')}
+              </div>
+
+              <div className="text-left">
+
+                <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
+                  Bagian
+                </p>
+
+                <p className="text-base font-bold leading-tight">
+                  {part.replace('part', '')}
+                </p>
+
+              </div>
+
+              <span
+                className={`ml-2 text-gray-400 transition-transform duration-300 ${
+                  showParts ? 'rotate-180' : ''
+                }`}
+              >
+                ↓
+              </span>
+
+            </button>
+
+            {/* DROPDOWN */}
+
+            {showParts && (
+              <>
+                <div
+                  className="fixed inset-0 z-30"
+                  onClick={() => setShowParts(false)}
+                />
+
+                <div className="absolute z-40 top-full left-0 mt-3 w-[280px] sm:w-[310px] bg-white rounded-3xl border border-gray-100 shadow-2xl shadow-black/10 p-2 animate-[dropdownIn_.22s_ease-out]">
+
+                  <div className="px-4 pt-3 pb-2">
+
+                    <p className="text-xs font-bold text-gray-900">
+                      Pilih Bagian
+                    </p>
+
+                    <p className="text-[11px] text-gray-400 mt-1">
+                      Pilih materi kanji yang ingin dipelajari
+                    </p>
+
+                  </div>
+
+                  <div className="max-h-[330px] overflow-y-auto px-1 pb-1">
+
+                    {Object.keys(kanjiData).map((p, index) => {
+
+                      const cards = allParts[p] || []
+
+                      const learned = mastered.filter((m) =>
+                        m.startsWith(`${p}-`)
+                      ).length
+
+                      const percentage =
+                        cards.length > 0
+                          ? Math.round(
+                              (learned / cards.length) * 100
+                            )
+                          : 0
+
+                      const selected = p === part
+
+                      return (
+                        <button
+                          key={p}
+                          onClick={() => changePart(p)}
+                          className={`w-full flex items-center gap-3 p-3 rounded-2xl text-left transition-all duration-200 ${
+                            selected
+                              ? 'bg-black text-white'
+                              : 'hover:bg-gray-50 text-gray-900'
+                          }`}
+                        >
+
+                          {/* NUMBER */}
+
+                          <div
+                            className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0 ${
+                              selected
+                                ? 'bg-white/15 text-white'
+                                : 'bg-gray-100 text-gray-700'
+                            }`}
+                          >
+                            {index + 1}
+                          </div>
+
+                          {/* INFO */}
+
+                          <div className="flex-1 min-w-0">
+
+                            <div className="flex items-center justify-between">
+
+                              <p className="font-bold text-sm">
+                                Bagian {index + 1}
+                              </p>
+
+                              {percentage === 100 && (
+                                <span
+                                  className={
+                                    selected
+                                      ? 'text-green-300'
+                                      : 'text-green-500'
+                                  }
+                                >
+                                  ✓
+                                </span>
+                              )}
+
+                            </div>
+
+                            <div className="flex items-center gap-2 mt-1">
+
+                              <p
+                                className={`text-[10px] ${
+                                  selected
+                                    ? 'text-white/50'
+                                    : 'text-gray-400'
+                                }`}
+                              >
+                                {learned} / {cards.length} hafal
+                              </p>
+
+                            </div>
+
+                            {/* MINI PROGRESS */}
+
+                            <div
+                              className={`h-1 rounded-full mt-2 overflow-hidden ${
+                                selected
+                                  ? 'bg-white/10'
+                                  : 'bg-gray-100'
+                              }`}
+                            >
+
+                              <div
+                                className={`h-full rounded-full transition-all duration-500 ${
+                                  selected
+                                    ? 'bg-white'
+                                    : 'bg-black'
+                                }`}
+                                style={{
+                                  width: `${percentage}%`,
+                                }}
+                              />
+
+                            </div>
+
+                          </div>
+
+                          {/* ARROW */}
+
+                          <span
+                            className={`text-sm ${
+                              selected
+                                ? 'text-white/50'
+                                : 'text-gray-300'
+                            }`}
+                          >
+                            ›
+                          </span>
+
+                        </button>
+                      )
+                    })}
+
+                  </div>
+
+                </div>
+              </>
+            )}
+
           </div>
+
+          {/* LOGOUT */}
 
           <button
             onClick={logout}
-            className="px-4 py-2 rounded-full bg-white border border-gray-200 text-xs font-semibold text-gray-600 hover:text-black hover:border-gray-300 transition"
+            className="px-4 py-2 rounded-full bg-white border border-gray-200 text-xs font-semibold text-gray-600 hover:text-black hover:border-gray-300 active:scale-95 transition"
           >
             Keluar
           </button>
@@ -456,7 +661,7 @@ const currentCards = allParts[part] || []
           <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
 
             <div
-              className="h-full bg-black rounded-full transition-all duration-500"
+              className="h-full bg-black rounded-full transition-all duration-700 ease-out"
               style={{
                 width: `${progress}%`,
               }}
@@ -469,7 +674,13 @@ const currentCards = allParts[part] || []
         {/* CARD */}
 
         {currentKanji ? (
-          <section>
+          <section
+            className={
+              changingPart
+                ? 'animate-[partExit_.22s_ease-in_forwards]'
+                : 'animate-[partEnter_.42s_cubic-bezier(.22,1,.36,1)]'
+            }
+          >
 
             <div
               className="relative h-[430px] sm:h-[480px] cursor-pointer"
@@ -480,7 +691,7 @@ const currentCards = allParts[part] || []
             >
 
               <div
-                className="relative w-full h-full transition-transform duration-500"
+                className="relative w-full h-full transition-transform duration-500 ease-out"
                 style={{
                   transformStyle: 'preserve-3d',
                   transform: isFlipped
@@ -499,18 +710,20 @@ const currentCards = allParts[part] || []
                 >
 
                   <div className="absolute top-6 left-6">
+
                     <span className="text-[10px] font-bold tracking-widest text-gray-300">
                       {cardIndex + 1} / {currentCards.length}
                     </span>
+
                   </div>
 
                   {isMastered && (
-                    <div className="absolute top-5 right-5 w-9 h-9 rounded-full bg-green-500 text-white flex items-center justify-center shadow-lg">
+                    <div className="absolute top-5 right-5 w-9 h-9 rounded-full bg-green-500 text-white flex items-center justify-center shadow-lg animate-[pop_.3s_ease-out]">
                       ✓
                     </div>
                   )}
 
-                  <div className="text-[150px] sm:text-[180px] leading-none font-medium select-none">
+                  <div className="text-[150px] sm:text-[180px] leading-none font-medium select-none transition-transform duration-300 hover:scale-105">
                     {currentKanji.k}
                   </div>
 
@@ -584,21 +797,21 @@ const currentCards = allParts[part] || []
 
               <button
                 onClick={prevCard}
-                className="bg-white border border-gray-200 py-3.5 rounded-2xl font-semibold text-sm hover:border-gray-300 active:scale-95 transition"
+                className="bg-white border border-gray-200 py-3.5 rounded-2xl font-semibold text-sm hover:border-gray-300 hover:-translate-y-0.5 active:scale-95 transition-all"
               >
                 ← Prev
               </button>
 
               <button
                 onClick={shuffle}
-                className="bg-white border border-gray-200 py-3.5 rounded-2xl font-semibold text-sm hover:border-gray-300 active:scale-95 transition"
+                className="bg-white border border-gray-200 py-3.5 rounded-2xl font-semibold text-sm hover:border-gray-300 hover:-translate-y-0.5 active:scale-95 transition-all"
               >
                 ⤨ Acak
               </button>
 
               <button
                 onClick={nextCard}
-                className="bg-white border border-gray-200 py-3.5 rounded-2xl font-semibold text-sm hover:border-gray-300 active:scale-95 transition"
+                className="bg-white border border-gray-200 py-3.5 rounded-2xl font-semibold text-sm hover:border-gray-300 hover:-translate-y-0.5 active:scale-95 transition-all"
               >
                 Next →
               </button>
@@ -610,22 +823,24 @@ const currentCards = allParts[part] || []
             <button
               onClick={toggleMastered}
               disabled={saving}
-              className={`w-full mt-3 py-4 rounded-2xl font-bold text-sm transition active:scale-[0.98] ${
+              className={`w-full mt-3 py-4 rounded-2xl font-bold text-sm transition-all active:scale-[0.97] ${
                 isMastered
-                  ? 'bg-green-500 text-white shadow-lg shadow-green-500/20'
+                  ? 'bg-green-500 text-white shadow-lg shadow-green-500/20 scale-[1.01]'
                   : 'bg-black text-white hover:bg-gray-800'
               }`}
             >
+
               {saving
                 ? 'Menyimpan...'
                 : isMastered
                   ? '✓ Sudah Hafal'
                   : '○ Tandai Sudah Hafal'}
+
             </button>
 
           </section>
         ) : (
-          <div className="bg-white rounded-3xl p-10 text-center">
+          <div className="bg-white rounded-3xl p-10 text-center animate-[partEnter_.4s_ease-out]">
             <p className="text-gray-500">
               Belum ada data kanji pada bagian ini.
             </p>
@@ -638,18 +853,21 @@ const currentCards = allParts[part] || []
 
           <button
             onClick={() => setShowCollection(true)}
-            className="bg-white border border-gray-200 rounded-2xl p-4 text-left hover:border-gray-300 transition"
+            className="bg-white border border-gray-200 rounded-2xl p-4 text-left hover:border-gray-300 hover:-translate-y-0.5 active:scale-[0.98] transition-all"
           >
-            <div className="text-lg mb-1">📚</div>
+
+            <div className="text-lg mb-1">
+              📚
+            </div>
+
             <p className="font-bold text-sm">
               Koleksi
             </p>
+
             <p className="text-xs text-gray-400 mt-1">
-              {
-                mastered.length
-              }{' '}
-              kanji sudah hafal
+              {mastered.length} kanji sudah hafal
             </p>
+
           </button>
 
           <button
@@ -657,15 +875,21 @@ const currentCards = allParts[part] || []
               setCardIndex(0)
               setIsFlipped(false)
             }}
-            className="bg-white border border-gray-200 rounded-2xl p-4 text-left hover:border-gray-300 transition"
+            className="bg-white border border-gray-200 rounded-2xl p-4 text-left hover:border-gray-300 hover:-translate-y-0.5 active:scale-[0.98] transition-all"
           >
-            <div className="text-lg mb-1">↺</div>
+
+            <div className="text-lg mb-1">
+              ↺
+            </div>
+
             <p className="font-bold text-sm">
               Mulai Lagi
             </p>
+
             <p className="text-xs text-gray-400 mt-1">
               Kembali ke kartu pertama
             </p>
+
           </button>
 
         </div>
@@ -673,9 +897,11 @@ const currentCards = allParts[part] || []
         {/* FOOTER */}
 
         <footer className="text-center mt-8 pb-5">
+
           <p className="text-[10px] tracking-widest text-gray-300 font-semibold">
             MASTER KANJI N3
           </p>
+
         </footer>
 
       </div>
@@ -684,18 +910,19 @@ const currentCards = allParts[part] || []
 
       {showCollection && (
         <div
-          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-5"
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-5 animate-[fadeIn_.2s_ease-out]"
           onClick={() => setShowCollection(false)}
         >
 
           <div
-            className="w-full max-w-2xl bg-white rounded-t-[30px] sm:rounded-[30px] max-h-[85vh] overflow-hidden shadow-2xl"
+            className="w-full max-w-2xl bg-white rounded-t-[30px] sm:rounded-[30px] max-h-[85vh] overflow-hidden shadow-2xl animate-[modalUp_.35s_cubic-bezier(.22,1,.36,1)]"
             onClick={(e) => e.stopPropagation()}
           >
 
             <div className="p-5 border-b border-gray-100 flex items-center justify-between">
 
               <div>
+
                 <h2 className="font-bold text-lg">
                   Koleksi Hafalan
                 </h2>
@@ -703,11 +930,12 @@ const currentCards = allParts[part] || []
                 <p className="text-xs text-gray-400 mt-1">
                   {mastered.length} kanji sudah ditandai
                 </p>
+
               </div>
 
               <button
                 onClick={() => setShowCollection(false)}
-                className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition"
+                className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 active:scale-90 transition"
               >
                 ✕
               </button>
@@ -743,9 +971,8 @@ const currentCards = allParts[part] || []
                     const savedIndex =
                       Number(savedIndexString)
 
-                   const allParts = kanjiData as Record<string, typeof kanjiData[keyof typeof kanjiData]>
-
-const cards = allParts[savedPart] || []
+                    const cards =
+                      allParts[savedPart] || []
 
                     const card = cards[savedIndex]
 
@@ -760,7 +987,7 @@ const cards = allParts[savedPart] || []
                           setIsFlipped(false)
                           setShowCollection(false)
                         }}
-                        className="aspect-square bg-gray-50 border border-gray-100 rounded-2xl flex flex-col items-center justify-center hover:bg-gray-100 transition"
+                        className="aspect-square bg-gray-50 border border-gray-100 rounded-2xl flex flex-col items-center justify-center hover:bg-gray-100 hover:scale-[1.02] active:scale-95 transition-all"
                       >
 
                         <span className="text-4xl">
@@ -784,6 +1011,84 @@ const cards = allParts[savedPart] || []
 
         </div>
       )}
+
+      {/* ANIMATION STYLE */}
+
+      <style jsx global>{`
+        @keyframes dropdownIn {
+          from {
+            opacity: 0;
+            transform: translateY(-8px) scale(0.96);
+          }
+
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+
+        @keyframes partEnter {
+          from {
+            opacity: 0;
+            transform: translateY(14px) scale(0.985);
+          }
+
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+
+        @keyframes partExit {
+          from {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+
+          to {
+            opacity: 0;
+            transform: translateY(-10px) scale(0.985);
+          }
+        }
+
+        @keyframes pop {
+          0% {
+            opacity: 0;
+            transform: scale(0.5);
+          }
+
+          70% {
+            transform: scale(1.15);
+          }
+
+          100% {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+
+          to {
+            opacity: 1;
+          }
+        }
+
+        @keyframes modalUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px) scale(0.98);
+          }
+
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+      `}</style>
 
     </main>
   )
