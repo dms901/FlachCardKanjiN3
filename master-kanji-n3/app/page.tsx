@@ -723,7 +723,7 @@ export default function Home() {
                     </div>
                   )}
 
-                  <div className="text-[clamp(10px,20vw,100px)] leading-none font-medium select-none transition-transform duration-300 hover:scale-105">
+                  <div className="text-[clamp(8px,15vw,90px)] leading-none font-medium select-none transition-transform duration-300 hover:scale-105">
                     {currentKanji.k}
                   </div>
 
@@ -743,7 +743,7 @@ export default function Home() {
                   }}
                 >
 
-                  <div className="text-[70px] leading-none">
+                  <div className="text-[50px] leading-none">
                     {currentKanji.k}
                   </div>
 
