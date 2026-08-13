@@ -1,11 +1,11 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { createClient } from '@supabase/supabase-js'
-import { dataKanji } from '../data/kanjiData' // <-- Data dari file terpisah
+import { dataKanji } from '../data/kanjiData'
 
 const supabase = createClient(
-  'PASTE_URL_SUPABASE_KAMU',
-  'PASTE_ANON_KEY_SUPABASE_KAMU'
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
 export default function Home() {
@@ -22,7 +22,7 @@ export default function Home() {
   const currentCards = dataKanji[part as keyof typeof dataKanji] || []
   const currentKanji = currentCards[cardIndex]
   const isMastered = mastered.includes(`${part}-${cardIndex}`)
-  const progress = currentCards.length? (mastered.filter(m => m.startsWith(`${part}-`)).length / currentCards.length) * 100 : 0
+  const progress = currentCards.length > 0? (mastered.filter(m => m.startsWith(`${part}-`)).length / currentCards.length) * 100 : 0
 
   useEffect(() => {
     setLoading(true)
@@ -30,7 +30,7 @@ export default function Home() {
       setUser(session?.user?? null)
       setLoading(false)
     })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user?? null)
     })
     return () => subscription.unsubscribe()
@@ -70,18 +70,14 @@ export default function Home() {
 
   const shuffle = () => {
     setIsFlipped(false)
-    const card = document.querySelector('.perspective-1000')
-    card?.classList.add('animate-shuffle')
-    setTimeout(() => card?.classList.remove('animate-shuffle'), 400)
     setCardIndex(Math.floor(Math.random() * currentCards.length))
   }
 
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>
 
-  // HALAMAN LOGIN
   if (!user) return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-premium p-8">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
+      <div className="w-full max-w-md bg-white rounded-3xl shadow-lg p-8">
         <p className="text-gray-400 text-sm mb-2">漢</p>
         <h1 className="text-3xl font-extrabold mb-1">Master Kanji</h1>
         <p className="text-gray-500 mb-6">Belajar Kanji N3</p>
@@ -92,7 +88,7 @@ export default function Home() {
         </div>
 
         <form onSubmit={handleAuth} className="space-y-3">
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@example.com" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-red-500 outline-none" required />
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@example.com" className="w-full border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-red-500 outline-none" required />
           <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Minimal 6 karakter" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-red-500 outline-none" required />
           <button type="submit" disabled={loading} className="w-full bg-red-500 text-white py-3 rounded-xl font-bold hover:bg-red-600 transition disabled:bg-gray-300">
             {loading? 'Loading...' : authMode === 'login'? 'Login' : 'Daftar'}
@@ -102,10 +98,8 @@ export default function Home() {
     </div>
   )
 
-  // HALAMAN UTAMA FLASHCARD
   return (
-    <div className="min-h-screen p-4 md:p-8 max-w-2xl mx-auto">
-      {/* HEADER */}
+    <div className="min-h-screen p-4 md:p-8 max-w-2xl mx-auto bg-gray-50">
       <div className="flex justify-between items-center mb-6">
         <div>
           <p className="text-xs text-gray-400">MASTER KANJI</p>
@@ -116,7 +110,6 @@ export default function Home() {
         <button onClick={logout} className="text-sm bg-gray-100 px-4 py-2 rounded-full hover:bg-gray-200 transition">Keluar</button>
       </div>
 
-      {/* PROGRESS BAR */}
       <div className="mb-6">
         <div className="flex justify-between text-xs text-gray-500 mb-1">
           <span>{cardIndex + 1} / {currentCards.length}</span>
@@ -127,25 +120,24 @@ export default function Home() {
         </div>
       </div>
 
-      {/* KARTU */}
-      <div className="perspective-1000 h-[320px] md:h-[400px] mb-6" onClick={() => setIsFlipped(!isFlipped)}>
-        <div className={`card-inner relative w-full h-full preserve-3d cursor-pointer ${isFlipped? 'rotate-y-180' : ''}`}>
-          {/* DEPAN */}
-          <div className="absolute inset-0 backface-hidden shadow-premium flex-col items-center justify-center p-8 text-center">
-            <p className="text-8xl md:text-9xl font-bold">{currentKanji?.kanji}</p>
-            <p className="text-xs text-gray-400 mt-8 tracking-[0.3em]">KETUK UNTUK LIHAT ARTI</p>
-          </div>
-          {/* BELAKANG */}
-          <div className="absolute inset-0 backface-hidden shadow-premium rotate-y-180 flex flex-col items-center justify-center p-8 text-center">
-            <p className="text-4xl font-bold mb-3">{currentKanji?.kanji}</p>
-            <p className="text-gray-600 text-lg">{currentKanji?.kunyomi}</p>
-            <p className="text-gray-600 text-lg mb-4">{currentKanji?.onyomi}</p>
-            <p className="mt-2 text-xl font-medium">{currentKanji?.arti}</p>
-          </div>
+      <div className="h-[320px] md:h-[400px] mb-6" onClick={() => setIsFlipped(!isFlipped)}>
+        <div className={`relative w-full h-full bg-white rounded-3xl shadow-lg flex-col items-center justify-center p-8 text-center cursor-pointer transition`}>
+          {!isFlipped? (
+            <>
+              <p className="text-8xl md:text-9xl font-bold">{currentKanji?.kanji}</p>
+              <p className="text-xs text-gray-400 mt-8 tracking-[0.3em]">KETUK UNTUK LIHAT ARTI</p>
+            </>
+          ) : (
+            <>
+              <p className="text-4xl font-bold mb-3">{currentKanji?.kanji}</p>
+              <p className="text-gray-600 text-lg">{currentKanji?.kunyomi}</p>
+              <p className="text-gray-600 text-lg mb-4">{currentKanji?.onyomi}</p>
+              <p className="mt-2 text-xl font-medium">{currentKanji?.arti}</p>
+            </>
+          )}
         </div>
       </div>
 
-      {/* TOMBOL */}
       <div className="flex gap-3 mb-3">
         <button onClick={prevCard} className="p-4 bg-gray-100 rounded-2xl hover:bg-gray-200 transition font-bold text-lg">←</button>
         <button onClick={toggleMastered} className={`flex-1 py-4 rounded-2xl font-bold text-white transition text-lg ${isMastered? 'bg-green-500' : 'bg-gray-400'}`}>
