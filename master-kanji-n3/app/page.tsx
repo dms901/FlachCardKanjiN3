@@ -723,7 +723,7 @@ export default function Home() {
                     </div>
                   )}
 
-                  <div className="text-[clamp(5px,10vw,80px)] leading-none font-medium select-none transition-transform duration-300 hover:scale-105">
+                  <div className="text-[clamp(6px,12vw,80px)] leading-none font-medium select-none transition-transform duration-300 hover:scale-105">
                     {currentKanji.k}
                   </div>
 
