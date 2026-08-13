@@ -1,57 +1,15 @@
 import type { Metadata } from 'next'
 import { Plus_Jakarta_Sans } from 'next/font/google'
+import './globals.css'
 
-const jakarta = Plus_Jakarta_Sans({ 
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800']
-})
+const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '700', '800'] })
 
-export const metadata: Metadata = {
-  title: 'Master Kanji N3',
-  description: 'Belajar Kanji N3 dengan Flashcard',
-}
+export const metadata: Metadata = { title: 'Master Kanji N3' }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="id">
-      <head>
-        <style>{`
-          * {
-              box-sizing: border-box;
-          }
-          body {
-              font-family: ${jakarta.style.fontFamily}, sans-serif;
-              background: #fcfcfd;
-              color: #1e293b;
-              -webkit-tap-highlight-color: transparent;
-              overflow-x: hidden;
-          }
-          .perspective-1000 { perspective: 1000px; }
-          .preserve-3d { transform-style: preserve-3d; }
-          .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
-          .rotate-y-180 { transform: rotateY(180deg); }
-          .card-inner { transition: transform .6s cubic-bezier(.4, 0, .2, 1); }
-          .shadow-premium { box-shadow: 0 15px 35px -10px rgba(0, 0, 0, .05); }
-          .active-part { background: #fef2f2; color: #ef4444; border-left: 4px solid #ef4444; }
-          .custom-scroll::-webkit-scrollbar { width: 4px; }
-          .custom-scroll::-webkit-scrollbar-track { background: transparent; }
-          .custom-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
-          @keyframes shuffle-pop {
-              0% { transform: scale(1); }
-              50% { transform: scale(1.05) rotate(2deg); }
-              100% { transform: scale(1); }
-          }
-          .animate-shuffle { animation: shuffle-pop .4s ease-out; }
-          .mastered { background: #f0fdf4 !important; border-color: #bbf7d0 !important; }
-        `}</style>
-      </head>
-      <body className={jakarta.className}>
-        {children}
-      </body>
+      <body className={jakarta.className}>{children}</body>
     </html>
   )
 }
