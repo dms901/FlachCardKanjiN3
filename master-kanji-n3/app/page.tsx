@@ -723,7 +723,18 @@ export default function Home() {
                     </div>
                   )}
 
-                  <div className="text-[150px] sm:text-[180px] leading-none font-medium select-none transition-transform duration-300 hover:scale-105">
+                  {/* HANYA BAGIAN INI YANG DIUBAH */}
+                  <div
+                    className="
+                      text-[clamp(90px,28vw,180px)]
+                      leading-none
+                      font-medium
+                      select-none
+                      transition-transform
+                      duration-300
+                      hover:scale-105
+                    "
+                  >
                     {currentKanji.k}
                   </div>
 
