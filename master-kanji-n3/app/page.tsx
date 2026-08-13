@@ -736,7 +736,7 @@ export default function Home() {
                 {/* BACK */}
 
                 <div
-                  className="absolute inset-0 bg-black text-white rounded-[32px] shadow-xl flex flex-col items-center justify-center p-8"
+                  className="absolute inset-0 bg-black text-white rounded-[70px] shadow-xl flex flex-col items-center justify-center p-8"
                   style={{
                     backfaceVisibility: 'hidden',
                     transform: 'rotateY(180deg)',
