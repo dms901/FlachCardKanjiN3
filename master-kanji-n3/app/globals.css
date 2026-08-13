@@ -4,12 +4,12 @@
 
 body {
   font-family: 'Plus Jakarta Sans', sans-serif;
-  background: #fcfd; /* Background abu2 muda */
+  background: #fcfd;
   color: #1e293b;
 }
-.perspective-1000 { perspective: 1000px; } /* Buat efek 3D */
+.perspective-1000 { perspective: 1000px; }
 .preserve-3d { transform-style: preserve-3d; }
-.backface-hidden { backface-visibility: hidden; } /* Biar belakang gak kebalik */
+.backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
 .rotate-y-180 { transform: rotateY(180deg); }
-.card-inner { transition: transform.6s cubic-bezier(.4, 0,.2, 1); } /* Animasi flip */
-.shadow-premium { box-shadow: 0 15px 35px -10px rgba(0, 0, 0,.05); } /* Shadow soft */
+.card-inner { transition: transform .6s cubic-bezier(.4, 0,.2, 1); }
+.shadow-premium { box-shadow: 0 15px 35px -10px rgba(0, 0, 0,.05); }
