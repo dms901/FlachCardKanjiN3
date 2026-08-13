@@ -703,7 +703,7 @@ export default function Home() {
                 {/* FRONT */}
 
                 <div
-                  className="absolute inset-0 bg-white rounded-[32px] border border-gray-100 shadow-xl shadow-black/5 flex flex-col items-center justify-center p-8"
+                  className="absolute inset-0 bg-white rounded-[27px] border border-gray-100 shadow-xl shadow-black/5 flex flex-col items-center justify-center p-8"
                   style={{
                     backfaceVisibility: 'hidden',
                   }}
@@ -723,7 +723,7 @@ export default function Home() {
                     </div>
                   )}
 
-                  <div className="text-[clamp(30px,25vw,120px)] leading-none font-medium select-none transition-transform duration-300 hover:scale-105">
+                  <div className="text-[clamp(15px,25vw,115px)] leading-none font-medium select-none transition-transform duration-300 hover:scale-105">
                     {currentKanji.k}
                   </div>
 
