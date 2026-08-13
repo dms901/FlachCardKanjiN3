@@ -67,80 +67,60 @@ export default function Home() {
 
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>
 
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-6 py-10">
-        <div className="w-full max-w-md">
-          <div className="text-center mb-10">
-            <div className="w-16 h-16 bg-red-500 text-white rounded-3xl flex items-center justify-center text-3xl font-black mx-auto mb-5 shadow-lg">漢</div>
-            <h1 className="text-2xl font-black text-slate-900">Master Kanji</h1>
-            <p className="text-sm text-slate-400 mt-2">Belajar Kanji N3</p>
-          </div>
-          <div className="bg-white rounded-[2rem] border-slate-100 shadow-premium p-7">
-            <div className="flex bg-slate-100 rounded-2xl p-1 mb-6">
-              <button onClick={() => setIsLogin(true)} className={`flex-1 py-3 rounded-xl font-bold text-sm ${isLogin? 'bg-white shadow-sm' : 'text-slate-400'}`}>Login</button>
-              <button onClick={() => setIsLogin(false)} className={`flex-1 py-3 rounded-xl font-bold text-sm ${!isLogin? 'bg-white shadow-sm' : 'text-slate-400'}`}>Daftar</button>
-            </div>
-            {message && <div className="mb-4 p-3 rounded-xl text-xs font-bold bg-red-50 text-red-500">{message}</div>}
-            <form onSubmit={handleAuth}>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="email@example.com" className="w-full px-4 py-4 mb-4 rounded-2xl border border-slate-200 outline-none focus:border-red-400 text-sm" />
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} placeholder="Minimal 6 karakter" className="w-full px-4 py-4 mb-6 rounded-2xl border-slate-200 outline-none focus:border-red-400 text-sm" />
-              <button type="submit" className="w-full py-4 bg-red-500 text-white rounded-2xl font-black shadow-lg shadow-red-100 active:scale-95 transition">{isLogin? 'Login' : 'Daftar'}</button>
-            </form>
-          </div>
-        </div>
+  if (!user) return (
+  <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="w-full max-w-md bg-white rounded-3xl shadow-premium p-8">
+      <p className="text-gray-400 text-sm mb-2">漢</p>
+      <h1 className="text-3xl font-extrabold mb-1">Master Kanji</h1>
+      <p className="text-gray-500 mb-6">Belajar Kanji N3</p>
+      
+      <div className="flex gap-2 mb-4">
+        <button onClick={() => setAuthMode('login')} className={`px-4 py-1.5 rounded-full text-sm font-semibold ${authMode === 'login' ? 'bg-red-100 text-red-500' : 'bg-gray-100 text-gray-500'}`}>Login</button>
+        <button onClick={() => setAuthMode('register')} className={`px-4 py-1.5 rounded-full text-sm font-semibold ${authMode === 'register' ? 'bg-red-100 text-red-500' : 'bg-gray-100 text-gray-500'}`}>Daftar</button>
       </div>
-    )
-  }
 
-  return (
-    <div className="flex flex-col items-center min-h-screen">
-      <header className="w-full max-w-md sticky top-0 bg-[#fcfcfd]/90 backdrop-blur-md z-50 border-b border-slate-100">
-        <div className="flex justify-between items-center px-6 py-4">
-          <div>
-            <h1 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Master Kanji</h1>
-            <select value={part} onChange={e => {setPart(Number(e.target.value)); setCardIndex(0)}} className="text-lg font-extrabold bg-transparent outline-none">
-              {Object.keys(allData).map(p => <option key={p} value={p}>Bagian {p}</option>)}
-            </select>
-          </div>
-          <button onClick={logout} className="px-3 py-2 rounded-xl bg-slate-100 text-[9px] font-black text-slate-500">Keluar</button>
-        </div>
-      </header>
-
-      <main className="w-full max-w-md px-6 pb-20 pt-8">
-        <div className="mb-8 px-1">
-          <div className="flex justify-between items-end mb-3">
-            <span className="text-xs font-black text-slate-900">{cardIndex + 1} / {currentCards.length}</span>
-            <span className="text-[10px] font-black text-red-500 bg-red-50 px-2 py-1 rounded-md">{progress.toFixed(0)}%</span>
-          </div>
-          <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-            <div className="h-full bg-red-500 transition-all duration-700" style={{width: `${progress}%`}}></div>
-          </div>
-        </div>
-
-        <div className="perspective-1000 w-full aspect-[4/4.8] cursor-pointer" onClick={() => setIsFlipped(!isFlipped)}>
-          <div className={`card-inner relative w-full h-full preserve-3d transition-transform duration-500 ${isFlipped? 'rotate-y-180' : ''}`}>
-            <div className="absolute inset-0 backface-hidden bg-white rounded-[3rem] shadow-premium border-slate-50 flex-col items-center justify-center p-8 text-center">
-              <div className="text-6xl text-slate-900 tracking-tighter">{currentKanji?.k}</div>
-            </div>
-            <div className="absolute inset-0 backface-hidden bg-white rounded-[3rem] shadow-premium border-4 border-red-50 rotate-y-180 flex flex-col items-center justify-center p-8 text-center">
-              <div className="text-3xl font-black text-red-500 mb-3">{currentKanji?.r}</div>
-              <div className="text-2xl font-semibold text-slate-600 leading-tight">{currentKanji?.m}</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-8 px-2">
-          <div className="flex items-center justify-between">
-            <button onClick={prevCard} className="w-14 h-14 flex items-center justify-center bg-white border border-slate-100 rounded-[1.5rem] shadow-sm text-xl active:scale-90 transition">←</button>
-            <button onClick={toggleMastered} className="flex-1 mx-3 h-14 bg-slate-900 text-white rounded-[1.5rem] font-black text-sm active:scale-95 transition">
-              {mastered.includes(`${part}-${cardIndex}`)? '✓ Sudah Hafal' : 'Tandai Hafal'}
-            </button>
-            <button onClick={nextCard} className="w-14 h-14 flex items-center justify-center bg-red-500 text-white rounded-[1.5rem] shadow-lg text-xl active:scale-90 transition">→</button>
-          </div>
-          <button onClick={shuffle} className="w-full h-12 mt-3 bg-white border-slate-200 text-slate-700 rounded-2xl font-black text-xs flex items-center justify-center gap-2 active:scale-[0.97] transition">🔀 Acak Kartu</button>
-        </div>
-      </main>
+      <form onSubmit={handleAuth} className="flex gap-2">
+        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@example.com" className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm" required />
+        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Minimal 6 karakter" className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm" required />
+        <button type="submit" className="bg-blue-500 text-white px-6 py-3 rounded-xl font-bold">Login</button>
+      </form>
     </div>
-  )
-}
+  </div>
+)
+
+ // PROGRESS BAR
+<div className="mb-6">
+  <div className="flex justify-between text-xs text-gray-500 mb-1">
+    <span>{cardIndex + 1} / {currentCards.length}</span>
+    <span className="text-red-500 font-bold">{Math.round(progress)}%</span>
+  </div>
+  <div className="w-full bg-gray-200 rounded-full h-1.5">
+    <div className="bg-red-500 h-1.5 rounded-full transition-all duration-700" style={{width: `${progress}%`}}></div>
+  </div>
+</div>
+
+// KARTU
+<div className="perspective-1000 h-[320px] mb-6">
+  <div className={`card-inner relative w-full h-full preserve-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
+    <div className="absolute inset-0 backface-hidden bg-white shadow-premium flex-col items-center justify-center p-8 text-center">
+      <p className="text-8xl font-bold">{currentKanji?.kanji}</p>
+      <p className="text-xs text-gray-400 mt-8">LIHAT ARTI</p>
+    </div>
+    <div className="absolute inset-0 backface-hidden bg-white shadow-premium rotate-y-180 flex-col items-center justify-center p-8">
+      <p className="text-2xl font-bold">{currentKanji?.kanji}</p>
+      <p className="text-gray-600">{currentKanji?.kunyomi}</p>
+      <p className="text-gray-600">{currentKanji?.onyomi}</p>
+      <p className="mt-2">{currentKanji?.arti}</p>
+    </div>
+  </div>
+</div>
+
+// TOMBOL BAWAH
+<div className="flex gap-2 mb-2">
+  <button onClick={prevCard} className="p-4 bg-gray-100 rounded-full">←</button>
+  <button onClick={toggleMastered} className={`flex-1 py-4 rounded-2xl font-bold text-white ${isMastered ? 'bg-green-500' : 'bg-gray-300'}`}>
+    ✓ Sudah Hafal
+  </button>
+  <button onClick={nextCard} className="p-4 bg-red-500 text-white rounded-full">→</button>
+</div>
+<button onClick={shuffle} className="w-full py-3 bg-gray-100 rounded-2xl text-sm text-gray-600">🔀 Acak Kartu</button>
