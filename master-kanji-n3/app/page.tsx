@@ -21,7 +21,7 @@ export default function Home() {
   const [isFlipped, setIsFlipped] = useState(false)
   const [mastered, setMastered] = useState<string[]>([])
 
-  const currentCards = allData[part] || []
+  const currentCards = allData[part as keyof typeof allData] || []
   const currentKanji = currentCards[cardIndex]
 
   useEffect(() => {
