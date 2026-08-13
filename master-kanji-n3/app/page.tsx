@@ -743,7 +743,7 @@ export default function Home() {
                   }}
                 >
 
-                  <div className="text-[70px] leading-none mb-8">
+                  <div className="text-[85px] leading-none mb-8">
                     {currentKanji.k}
                   </div>
 
