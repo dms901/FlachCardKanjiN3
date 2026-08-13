@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { createClient } from '@supabase/supabase-js'
-import allData from '@/data/kanjiData'
+import allData from '../data/kanjiData'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
