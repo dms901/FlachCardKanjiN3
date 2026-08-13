@@ -743,7 +743,7 @@ export default function Home() {
                   }}
                 >
 
-                  <div className="text-[clamp(120px,28vw,180px)] leading-none font-medium select-none">
+                  <div className="text-[clamp(100px,28vw,170px)] leading-none font-medium select-none">
                     {currentKanji.k}
                   </div>
 
