@@ -1,21 +1,26 @@
 @import "tailwindcss";
 
-@theme {
-  --font-jakarta: 'Plus Jakarta Sans', sans-serif;
-}
-
 body {
-    font-family: var(--font-jakarta);
     background: #f8f9fa;
     color: #1e293b;
+    -webkit-tap-highlight-color: transparent;
 }
 
-.shadow-premium { 
-  box-shadow: 0 10px 40px -15px rgba(0, 0, 0, .08);
-  border-radius: 2rem;
-}
 .perspective-1000 { perspective: 1000px; }
 .preserve-3d { transform-style: preserve-3d; }
-.backface-hidden { backface-visibility: hidden; }
+.backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
 .rotate-y-180 { transform: rotateY(180deg); }
-.card-inner { transition: transform .6s cubic-bezier(.4, 0, .2, 1); }
+.card-inner { transition: transform.6s cubic-bezier(.4, 0,.2, 1); }
+
+.shadow-premium { 
+  box-shadow: 0 10px 40px -15px rgba(0, 0, 0,.08);
+  border-radius: 2rem;
+  background: white;
+}
+
+@keyframes shuffle-pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05) rotate(2deg); }
+    100% { transform: scale(1); }
+}
+.animate-shuffle { animation: shuffle-pop.4s ease-out; }
