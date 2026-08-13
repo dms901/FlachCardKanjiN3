@@ -15,7 +15,9 @@ export default function Home() {
   const [password, setPassword] = useState('')
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login')
 
-  const [part, setPart] = useState('part1')
+  const [part, setPart] = useState(() => {
+  return Object.keys(kanjiData)[0] || ''
+})
   const [cardIndex, setCardIndex] = useState(0)
   const [isFlipped, setIsFlipped] = useState(false)
   const [mastered, setMastered] = useState<string[]>([])
