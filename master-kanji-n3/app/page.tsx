@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { createClient } from '@supabase/supabase-js'
-import { dataKanji } from '../data/dataKanji' // <-- Data dari file terpisah
+import { dataKanji } from '../data/kanjiData' // <-- Data dari file terpisah
 
 const supabase = createClient(
   'PASTE_URL_SUPABASE_KAMU',
