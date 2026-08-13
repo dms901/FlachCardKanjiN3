@@ -1,4 +1,4 @@
-const kanjiData= {
+const kanjiData = {
 
           1:[
   { "k": "残業", "r": "ざんぎょう", "m": "Lembur" },
