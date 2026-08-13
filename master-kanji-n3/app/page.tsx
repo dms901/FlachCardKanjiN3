@@ -723,7 +723,7 @@ export default function Home() {
                     </div>
                   )}
 
-                  <div className="text-[clamp(8px,15vw,90px)] leading-none font-medium select-none transition-transform duration-300 hover:scale-105">
+                  <div className="text-[clamp(5px,10vw,80px)] leading-none font-medium select-none transition-transform duration-300 hover:scale-105">
                     {currentKanji.k}
                   </div>
 
@@ -915,7 +915,7 @@ export default function Home() {
         >
 
           <div
-            className="w-full max-w-2xl bg-white rounded-t-[30px] sm:rounded-[30px] max-h-[85vh] overflow-hidden shadow-2xl animate-[modalUp_.35s_cubic-bezier(.22,1,.36,1)]"
+            className="w-full max-w-2xl bg-white rounded-t-[30px] sm:rounded-[30px] h-[85vh] shadow-2xl flex flex-col overflow-hidden animate-[modalUp_.35s_cubic-bezier(.22,1,.36,1)]"
             onClick={(e) => e.stopPropagation()}
           >
 
@@ -942,7 +942,7 @@ export default function Home() {
 
             </div>
 
-            <div className="overflow-y-auto p-5">
+            <div className="flex-1 min-h-0 overflow-y-auto p-5 overscroll-contain">
 
               {mastered.length === 0 ? (
                 <div className="py-16 text-center">
