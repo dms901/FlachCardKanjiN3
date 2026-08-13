@@ -1146,4 +1146,4 @@ const kanjiData = {
 
         };
 
-        export default kanjiData
+        export { kanjiData }
