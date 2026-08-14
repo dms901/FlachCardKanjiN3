@@ -2103,7 +2103,7 @@ export default function Home() {
 
                   <div className="absolute top-6 left-6">
 
-                   <span className="text-[clamp(8px,2.5vw,10px)] font-bold tracking-widest text-gray-300">
+                   <span className="text-[clamp(5px,2.5vw,10px)] font-bold tracking-widest text-gray-300">
                      {cardIndex + 1} / {currentCards.length}
                    </span>
 
