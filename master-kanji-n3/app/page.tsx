@@ -1251,128 +1251,134 @@ export default function Home() {
 
             </div>
 
-          {/* ==================================================
-    COLLECTION CONTENT
-=================================================== */}
+            {/* ==========================================================
+                COLLECTION CONTENT
+            =========================================================== */}
 
-<div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 sm:px-5 py-4">
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 sm:px-5 py-4">
 
-  {mastered.length === 0 ? (
+              {mastered.length === 0 ? (
 
-    <div className="py-16 text-center">
+                <div className="h-full flex flex-col items-center justify-center text-center px-6">
 
-      <div className="text-4xl mb-4">
-        📖
-      </div>
+                  <div className="w-16 h-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center text-3xl mb-4">
+                    📖
+                  </div>
 
-      <p className="font-semibold text-gray-700">
-        Belum ada kanji
-      </p>
-
-      <p className="text-sm text-gray-400 mt-1">
-        Tandai kanji sebagai sudah hafal.
-      </p>
-
-    </div>
-
-  ) : (
-
-    <div className="space-y-2">
-
-      {mastered.map((id) => {
-
-        const [
-          savedPart,
-          savedIndexString,
-        ] = id.split('-')
-
-        const savedIndex =
-          Number(savedIndexString)
-
-        const cards =
-          allParts[savedPart] || []
-
-        const card =
-          cards[savedIndex]
-
-        if (!card)
-          return null
-
-        return (
-
-          <button
-            key={id}
-            onClick={() => {
-              setUnlearnedOnly(false)
-              setPart(savedPart)
-              setCardIndex(savedIndex)
-              setIsFlipped(false)
-              setShowCollection(false)
-            }}
-            className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-3 sm:px-4 py-3 text-left hover:bg-gray-100 hover:border-gray-200 active:scale-[0.99] transition-all"
-          >
-
-            <div className="flex items-start w-full">
-
-              {/* ==================================================
-                  KANJI
-              ================================================== */}
-
-              <div className="flex-shrink-0 flex items-start justify-start min-w-fit max-w-[55%] pr-4">
-
-                <span className="text-3xl sm:text-4xl leading-tight font-medium whitespace-nowrap">
-                  {card.k}
-                </span>
-
-              </div>
-
-              {/* ==================================================
-                  INFORMASI
-              ================================================== */}
-
-              <div className="flex-1 min-w-0 pt-1">
-
-                <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">
-                  Arti
-                </p>
-
-                <p className="text-sm sm:text-base font-semibold text-gray-800 leading-snug break-words">
-                  {card.m}
-                </p>
-
-                {card.r && (
-                  <p className="text-[11px] text-gray-400 mt-1 break-words">
-                    {card.r}
+                  <p className="font-semibold text-gray-700">
+                    Belum ada kanji
                   </p>
-                )}
 
-              </div>
+                  <p className="text-sm text-gray-400 mt-1 max-w-xs">
+                    Tandai kanji sebagai sudah hafal untuk memasukkannya ke koleksi.
+                  </p>
 
-              {/* ==================================================
-                  TANDA HIJAU
-              ================================================== */}
+                </div>
 
-              <div className="flex-shrink-0 w-8 h-8 ml-3 mt-1 rounded-full bg-green-50 border border-green-100 flex items-center justify-center">
+              ) : (
 
-                <span className="text-green-500 text-sm font-bold">
-                  ✓
-                </span>
+                <div className="space-y-2.5">
 
-              </div>
+                  {mastered.map((id) => {
 
-            </div>
+                    const [
+                      savedPart,
+                      savedIndexString,
+                    ] = id.split('-')
 
-          </button>
+                    const savedIndex =
+                      Number(
+                        savedIndexString
+                      )
 
-        )
+                    const cards =
+                      allParts[
+                        savedPart
+                      ] || []
 
-      })}
+                    const card =
+                      cards[savedIndex]
 
-    </div>
+                    if (!card)
+                      return null
 
-  )}
+                    return (
 
-</div>
+                      <button
+                        key={id}
+                        onClick={() => {
+                          setUnlearnedOnly(false)
+                          setPart(savedPart)
+                          setCardIndex(
+                            savedIndex
+                          )
+                          setIsFlipped(false)
+                          setShowCollection(
+                            false
+                          )
+                        }}
+                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-3 py-3 sm:px-4 sm:py-3.5 flex items-center gap-3 sm:gap-4 text-left hover:bg-gray-100 hover:border-gray-200 active:scale-[0.985] transition-all"
+                      >
+
+                        {/* ==================================================
+                            KANJI
+                        ================================================== */}
+
+                        <div className="flex-shrink-0 flex items-start justify-start min-w-fit max-w-[55%] pr-4">
+
+                          <span className="text-[30px] sm:text-[32px] leading-none whitespace-nowrap">
+                            {card.k}
+                          </span>
+
+                        </div>
+
+                        {/* ==================================================
+                            INFORMASI
+                        ================================================== */}
+
+                        <div className="flex-1 min-w-0">
+
+                          <p className="text-[9px] sm:text-[10px] uppercase tracking-[0.15em] text-gray-400 mb-1">
+                            Arti
+                          </p>
+
+                          <p className="text-sm sm:text-base font-semibold text-gray-800 leading-snug break-words">
+                            {card.m}
+                          </p>
+
+                          {card.r && (
+
+                            <p className="text-[11px] sm:text-xs text-gray-400 mt-1 leading-relaxed break-words">
+                              {card.r}
+                            </p>
+
+                          )}
+
+                          <p className="text-[9px] text-gray-300 mt-1.5">
+                            Bagian {savedPart.replace('part', '')}
+                          </p>
+
+                        </div>
+
+                        {/* ==================================================
+                            TANDA HIJAU
+                        ================================================== */}
+
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-50 border border-green-100 flex items-center justify-center">
+
+                          <span className="text-green-500 text-sm font-bold">
+                            ✓
+                          </span>
+
+                        </div>
+
+                      </button>
+
+                    )
+
+                  })}
+
+                </div>
 
               )}
 
