@@ -582,7 +582,9 @@ export default function Home() {
 
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-5 sm:py-8">
 
-        {/* HEADER */}
+        {/* ================================================================
+            HEADER
+        ================================================================= */}
 
         <div className="sticky top-0 z-30 bg-[#f7f8fc] pt-1 pb-3">
 
@@ -590,7 +592,9 @@ export default function Home() {
 
             <div className="flex items-center gap-2">
 
-              {/* BAGIAN */}
+              {/* ========================================================
+                  BAGIAN
+              ========================================================= */}
 
               <div className="relative flex-1 min-w-0">
 
@@ -788,7 +792,9 @@ export default function Home() {
 
               </div>
 
-              {/* KOLEKSI */}
+              {/* ========================================================
+                  KOLEKSI
+              ========================================================= */}
 
               <button
                 onClick={() => {
@@ -809,7 +815,9 @@ export default function Home() {
 
               </button>
 
-              {/* BELUM */}
+              {/* ========================================================
+                  BELUM
+              ========================================================= */}
 
               <button
                 onClick={startUnlearnedMode}
@@ -827,7 +835,9 @@ export default function Home() {
 
               </button>
 
-              {/* KELUAR */}
+              {/* ========================================================
+                  KELUAR
+              ========================================================= */}
 
               <button
                 onClick={logout}
@@ -893,7 +903,9 @@ export default function Home() {
 
         </div>
 
-        {/* MODE BELUM HAFAL */}
+        {/* ================================================================
+            MODE BELUM HAFAL
+        ================================================================= */}
 
         {unlearnedOnly && (
           <div className="mb-4 flex items-center justify-between bg-black text-white rounded-2xl px-4 py-3">
@@ -924,7 +936,9 @@ export default function Home() {
           </div>
         )}
 
-        {/* CARD */}
+        {/* ================================================================
+            CARD
+        ================================================================= */}
 
         {currentKanji ? (
 
@@ -1181,48 +1195,73 @@ export default function Home() {
         >
 
           <div
-            className="w-full max-w-2xl bg-white rounded-t-[30px] sm:rounded-[30px] h-[85vh] shadow-2xl flex flex-col overflow-hidden animate-[modalUp_.35s_cubic-bezier(.22,1,.36,1)]"
+            className="w-full max-w-2xl bg-white rounded-t-[30px] sm:rounded-[30px] max-h-[88vh] h-[88vh] sm:h-[82vh] shadow-2xl flex flex-col overflow-hidden animate-[modalUp_.35s_cubic-bezier(.22,1,.36,1)]"
             onClick={(e) =>
               e.stopPropagation()
             }
           >
 
-            {/* MODAL HEADER */}
+            {/* ==========================================================
+                MODAL HEADER
+            =========================================================== */}
 
-            <div className="flex-shrink-0 px-5 pt-10 pb-5 border-b border-gray-100 flex items-center justify-between">
+            <div className="flex-shrink-0 bg-white px-5 pt-5 pb-4 sm:px-6 sm:pt-6 sm:pb-5 border-b border-gray-100">
 
-              <div className="min-w-0 pr-3">
+              {/* HANDLE MOBILE */}
 
-                <h2 className="font-bold text-lg leading-tight">
-                  Koleksi Hafalan
-                </h2>
+              <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-5 sm:hidden" />
 
-                <p className="text-xs text-gray-400 mt-1 leading-relaxed">
-                  {mastered.length} kanji sudah ditandai
-                </p>
+              <div className="flex items-center justify-between gap-4">
+
+                <div className="min-w-0">
+
+                  <div className="flex items-center gap-2">
+
+                    <div className="w-10 h-10 rounded-xl bg-black text-white flex items-center justify-center text-lg flex-shrink-0">
+                      📚
+                    </div>
+
+                    <div className="min-w-0">
+
+                      <h2 className="font-bold text-lg leading-tight text-gray-900">
+                        Koleksi Hafalan
+                      </h2>
+
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {mastered.length} kanji sudah ditandai
+                      </p>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+                <button
+                  onClick={() =>
+                    setShowCollection(false)
+                  }
+                  className="w-10 h-10 flex-shrink-0 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200 hover:text-gray-700 active:scale-90 transition-all"
+                  aria-label="Tutup koleksi"
+                >
+                  ✕
+                </button>
 
               </div>
 
-              <button
-                onClick={() =>
-                  setShowCollection(false)
-                }
-                className="w-9 h-9 flex-shrink-0 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 active:scale-90 transition"
-              >
-                ✕
-              </button>
-
             </div>
 
-            {/* COLLECTION CONTENT */}
+            {/* ==========================================================
+                COLLECTION CONTENT
+            =========================================================== */}
 
             <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 sm:px-5 py-4">
 
               {mastered.length === 0 ? (
 
-                <div className="py-16 text-center">
+                <div className="h-full flex flex-col items-center justify-center text-center px-6">
 
-                  <div className="text-4xl mb-4">
+                  <div className="w-16 h-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center text-3xl mb-4">
                     📖
                   </div>
 
@@ -1230,15 +1269,15 @@ export default function Home() {
                     Belum ada kanji
                   </p>
 
-                  <p className="text-sm text-gray-400 mt-1">
-                    Tandai kanji sebagai sudah hafal.
+                  <p className="text-sm text-gray-400 mt-1 max-w-xs">
+                    Tandai kanji sebagai sudah hafal untuk memasukkannya ke koleksi.
                   </p>
 
                 </div>
 
               ) : (
 
-                <div className="space-y-2">
+                <div className="space-y-2.5">
 
                   {mastered.map((id) => {
 
@@ -1278,41 +1317,16 @@ export default function Home() {
                             false
                           )
                         }}
-                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-3 sm:px-4 py-3 flex items-center gap-3 sm:gap-4 text-left hover:bg-gray-100 hover:border-gray-200 active:scale-[0.99] transition-all"
+                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-3 py-3 sm:px-4 sm:py-3.5 flex items-center gap-3 sm:gap-4 text-left hover:bg-gray-100 hover:border-gray-200 active:scale-[0.985] transition-all"
                       >
 
                         {/* ==================================================
                             KANJI
                         ================================================== */}
 
-                        <div
-                          className="
-                            flex-shrink-0
-                            min-w-[56px]
-                            w-max
-                            max-w-none
-                            min-h-14
-                            rounded-xl
-                            bg-white
-                            border
-                            border-gray-100
-                            flex
-                            items-center
-                            justify-start
-                            px-2
-                            overflow-visible
-                          "
-                        >
+                        <div className="flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-white border border-gray-100 flex items-center justify-center shadow-sm">
 
-                          <span
-                            className="
-                              text-3xl
-                              leading-none
-                              whitespace-nowrap
-                              font-normal
-                              block
-                            "
-                          >
+                          <span className="text-[30px] sm:text-[32px] leading-none whitespace-nowrap">
                             {card.k}
                           </span>
 
@@ -1324,19 +1338,25 @@ export default function Home() {
 
                         <div className="flex-1 min-w-0">
 
-                          <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">
+                          <p className="text-[9px] sm:text-[10px] uppercase tracking-[0.15em] text-gray-400 mb-1">
                             Arti
                           </p>
 
-                          <p className="text-sm sm:text-base font-semibold text-gray-800 leading-snug whitespace-normal break-words">
+                          <p className="text-sm sm:text-base font-semibold text-gray-800 leading-snug break-words">
                             {card.m}
                           </p>
 
                           {card.r && (
-                            <p className="text-[11px] text-gray-400 mt-1 whitespace-nowrap overflow-hidden text-ellipsis">
+
+                            <p className="text-[11px] sm:text-xs text-gray-400 mt-1 leading-relaxed break-words">
                               {card.r}
                             </p>
+
                           )}
+
+                          <p className="text-[9px] text-gray-300 mt-1.5">
+                            Bagian {savedPart.replace('part', '')}
+                          </p>
 
                         </div>
 
@@ -1355,6 +1375,7 @@ export default function Home() {
                       </button>
 
                     )
+
                   })}
 
                 </div>
@@ -1363,13 +1384,21 @@ export default function Home() {
 
             </div>
 
+            {/* ==========================================================
+                BOTTOM SAFE AREA
+            =========================================================== */}
+
+            <div className="flex-shrink-0 bg-white h-[env(safe-area-inset-bottom)]" />
+
           </div>
 
         </div>
 
       )}
 
-      {/* ANIMATION STYLE */}
+      {/* ================================================================
+          ANIMATION STYLE
+      ================================================================= */}
 
       <style jsx global>{`
 
