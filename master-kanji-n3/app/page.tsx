@@ -432,11 +432,12 @@ export default function Home() {
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-5 sm:py-8">
 
         {/* HEADER */}
+    <div className="sticky top-0 z-30 bg-[#f7f8fc] pt-1 pb-2">
 
         <header className="flex items-center justify-between mb-6">
 
           {/* CUSTOM PART MENU */}
-
+ 
           <div className="relative">
 
             <p className="text-[10px] tracking-[0.2em] font-bold text-gray-400 mb-2">
@@ -670,7 +671,7 @@ export default function Home() {
           </div>
 
         </section>
-
+        </div>
         {/* CARD */}
 
         {currentKanji ? (
@@ -908,7 +909,7 @@ export default function Home() {
 
       {/* COLLECTION MODAL */}
 
-      {showCollection && (
+     {showCollection && (
         <div
           className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-5 animate-[fadeIn_.2s_ease-out]"
           onClick={() => setShowCollection(false)}
