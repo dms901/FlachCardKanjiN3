@@ -599,302 +599,281 @@ export default function Home() {
 
         <div className="sticky top-0 z-30 bg-[#f7f8fc] pt-1 pb-2">
 
-          <header className="mb-4">
+         <header className="mb-4">
 
-            <div className="flex items-end justify-between gap-2">
+  <div className="flex items-center gap-2">
 
-              {/* ========================================================
-                  MENU BAGIAN
-              ========================================================= */}
+    {/* ========================================================
+        MENU BAGIAN
+    ========================================================= */}
 
-              <div className="relative min-w-0">
+    <div className="relative flex-1 min-w-0">
 
-                <p className="text-[10px] tracking-[0.2em] font-bold text-gray-400 mb-2">
-                  MASTER KANJI
-                </p>
+      <button
+        onClick={() =>
+          setShowParts(!showParts)
+        }
+        className="w-full h-[54px] group flex items-center gap-2 bg-white border border-gray-200 rounded-2xl px-2.5 shadow-sm hover:shadow-md hover:border-gray-300 active:scale-[0.98] transition-all"
+      >
 
-                <button
-                  onClick={() =>
-                    setShowParts(!showParts)
-                  }
-                  className="group flex items-center gap-2.5 bg-white border border-gray-200 rounded-2xl px-3 py-2.5 shadow-sm hover:shadow-md hover:border-gray-300 active:scale-[0.98] transition-all"
-                >
+        {/* NOMOR BAGIAN */}
 
-                  {/* NOMOR BAGIAN */}
+        <div className="w-9 h-9 rounded-xl bg-black text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
+          {part.replace('part', '')}
+        </div>
 
-                  <div className="w-9 h-9 rounded-xl bg-black text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
-                    {part.replace(
-                      'part',
-                      ''
-                    )}
-                  </div>
+        {/* BAGIAN */}
 
-                  {/* BAGIAN + ANGKA SEJAJAR */}
+        <div className="flex items-center gap-1.5 min-w-0">
 
-                  <div className="flex items-center gap-2">
+          <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
+            Bagian
+          </p>
 
-                    <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
-                      Bagian
-                    </p>
+          <p className="text-base font-bold leading-none">
+            {part.replace('part', '')}
+          </p>
 
-                    <p className="text-base font-bold leading-none">
-                      {part.replace(
-                        'part',
-                        ''
-                      )}
-                    </p>
+        </div>
 
-                  </div>
+        <span
+          className={`ml-auto text-gray-400 transition-transform duration-300 ${
+            showParts
+              ? 'rotate-180'
+              : ''
+          }`}
+        >
+          ↓
+        </span>
 
-                  <span
-                    className={`text-gray-400 transition-transform duration-300 ${
-                      showParts
-                        ? 'rotate-180'
-                        : ''
-                    }`}
-                  >
-                    ↓
-                  </span>
+      </button>
 
-                </button>
+      {/* ======================================================
+          DROPDOWN BAGIAN
+      ======================================================= */}
 
-                {/* ======================================================
-                    DROPDOWN BAGIAN
-                ======================================================= */}
+      {showParts && (
+        <>
 
-                {showParts && (
-                  <>
+          <div
+            className="fixed inset-0 z-30"
+            onClick={() =>
+              setShowParts(false)
+            }
+          />
 
-                    <div
-                      className="fixed inset-0 z-30"
+          <div className="absolute z-40 top-full left-0 mt-3 w-[280px] sm:w-[310px] bg-white rounded-3xl border border-gray-100 shadow-2xl shadow-black/10 p-2 animate-[dropdownIn_.22s_ease-out]">
+
+            <div className="px-4 pt-3 pb-2">
+
+              <p className="text-xs font-bold text-gray-900">
+                Pilih Bagian
+              </p>
+
+              <p className="text-[11px] text-gray-400 mt-1">
+                Pilih materi kanji yang ingin dipelajari
+              </p>
+
+            </div>
+
+            <div className="max-h-[330px] overflow-y-auto px-1 pb-1">
+
+              {Object.keys(
+                kanjiData
+              ).map(
+                (p, index) => {
+
+                  const cards =
+                    allParts[p] || []
+
+                  const learned =
+                    mastered.filter(
+                      (m) =>
+                        m.startsWith(
+                          `${p}-`
+                        )
+                    ).length
+
+                  const percentage =
+                    cards.length > 0
+                      ? Math.round(
+                          (learned /
+                            cards.length) *
+                            100
+                        )
+                      : 0
+
+                  const selected =
+                    p === part
+
+                  return (
+                    <button
+                      key={p}
                       onClick={() =>
-                        setShowParts(false)
+                        changePart(p)
                       }
-                    />
+                      className={`w-full flex items-center gap-3 p-3 rounded-2xl text-left transition-all duration-200 ${
+                        selected
+                          ? 'bg-black text-white'
+                          : 'hover:bg-gray-50 text-gray-900'
+                      }`}
+                    >
 
-                    <div className="absolute z-40 top-full left-0 mt-3 w-[280px] sm:w-[310px] bg-white rounded-3xl border border-gray-100 shadow-2xl shadow-black/10 p-2 animate-[dropdownIn_.22s_ease-out]">
+                      <div
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0 ${
+                          selected
+                            ? 'bg-white/15 text-white'
+                            : 'bg-gray-100 text-gray-700'
+                        }`}
+                      >
+                        {index + 1}
+                      </div>
 
-                      <div className="px-4 pt-3 pb-2">
+                      <div className="flex-1 min-w-0">
 
-                        <p className="text-xs font-bold text-gray-900">
-                          Pilih Bagian
+                        <div className="flex items-center justify-between">
+
+                          <p className="font-bold text-sm">
+                            Bagian {index + 1}
+                          </p>
+
+                          {percentage === 100 && (
+                            <span
+                              className={
+                                selected
+                                  ? 'text-green-300'
+                                  : 'text-green-500'
+                              }
+                            >
+                              ✓
+                            </span>
+                          )}
+
+                        </div>
+
+                        <p
+                          className={`text-[10px] mt-1 ${
+                            selected
+                              ? 'text-white/50'
+                              : 'text-gray-400'
+                          }`}
+                        >
+                          {learned} / {cards.length} hafal
                         </p>
 
-                        <p className="text-[11px] text-gray-400 mt-1">
-                          Pilih materi kanji yang ingin dipelajari
-                        </p>
+                        <div
+                          className={`h-1 rounded-full mt-2 overflow-hidden ${
+                            selected
+                              ? 'bg-white/10'
+                              : 'bg-gray-100'
+                          }`}
+                        >
+
+                          <div
+                            className={`h-full rounded-full transition-all duration-500 ${
+                              selected
+                                ? 'bg-white'
+                                : 'bg-black'
+                            }`}
+                            style={{
+                              width: `${percentage}%`,
+                            }}
+                          />
+
+                        </div>
 
                       </div>
 
-                      <div className="max-h-[330px] overflow-y-auto px-1 pb-1">
+                      <span
+                        className={`text-sm ${
+                          selected
+                            ? 'text-white/50'
+                            : 'text-gray-300'
+                        }`}
+                      >
+                        ›
+                      </span>
 
-                        {Object.keys(
-                          kanjiData
-                        ).map(
-                          (p, index) => {
-
-                            const cards =
-                              allParts[p] ||
-                              []
-
-                            const learned =
-                              mastered.filter(
-                                (m) =>
-                                  m.startsWith(
-                                    `${p}-`
-                                  )
-                              ).length
-
-                            const percentage =
-                              cards.length > 0
-                                ? Math.round(
-                                    (learned /
-                                      cards.length) *
-                                      100
-                                  )
-                                : 0
-
-                            const selected =
-                              p === part
-
-                            return (
-                              <button
-                                key={p}
-                                onClick={() =>
-                                  changePart(
-                                    p
-                                  )
-                                }
-                                className={`w-full flex items-center gap-3 p-3 rounded-2xl text-left transition-all duration-200 ${
-                                  selected
-                                    ? 'bg-black text-white'
-                                    : 'hover:bg-gray-50 text-gray-900'
-                                }`}
-                              >
-
-                                {/* NUMBER */}
-
-                                <div
-                                  className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0 ${
-                                    selected
-                                      ? 'bg-white/15 text-white'
-                                      : 'bg-gray-100 text-gray-700'
-                                  }`}
-                                >
-                                  {index + 1}
-                                </div>
-
-                                {/* INFO */}
-
-                                <div className="flex-1 min-w-0">
-
-                                  <div className="flex items-center justify-between">
-
-                                    <p className="font-bold text-sm">
-                                      Bagian{' '}
-                                      {index +
-                                        1}
-                                    </p>
-
-                                    {percentage ===
-                                      100 && (
-                                      <span
-                                        className={
-                                          selected
-                                            ? 'text-green-300'
-                                            : 'text-green-500'
-                                        }
-                                      >
-                                        ✓
-                                      </span>
-                                    )}
-
-                                  </div>
-
-                                  <p
-                                    className={`text-[10px] mt-1 ${
-                                      selected
-                                        ? 'text-white/50'
-                                        : 'text-gray-400'
-                                    }`}
-                                  >
-                                    {learned} /{' '}
-                                    {
-                                      cards.length
-                                    }{' '}
-                                    hafal
-                                  </p>
-
-                                  <div
-                                    className={`h-1 rounded-full mt-2 overflow-hidden ${
-                                      selected
-                                        ? 'bg-white/10'
-                                        : 'bg-gray-100'
-                                    }`}
-                                  >
-
-                                    <div
-                                      className={`h-full rounded-full transition-all duration-500 ${
-                                        selected
-                                          ? 'bg-white'
-                                          : 'bg-black'
-                                      }`}
-                                      style={{
-                                        width: `${percentage}%`,
-                                      }}
-                                    />
-
-                                  </div>
-
-                                </div>
-
-                                <span
-                                  className={`text-sm ${
-                                    selected
-                                      ? 'text-white/50'
-                                      : 'text-gray-300'
-                                  }`}
-                                >
-                                  ›
-                                </span>
-
-                              </button>
-                            )
-                          }
-                        )}
-
-                      </div>
-
-                    </div>
-
-                  </>
-                )}
-
-              </div>
-
-              {/* ========================================================
-                  MENU KOLEKSI + BELUM HAFAL
-              ========================================================= */}
-
-              <div className="flex items-center gap-2 flex-shrink-0">
-
-                {/* KOLEKSI */}
-
-                <button
-                  onClick={() => {
-                    setUnlearnedOnly(false)
-                    setShowCollection(true)
-                  }}
-                  className="group bg-white border border-gray-200 rounded-2xl w-[54px] h-[54px] flex flex-col items-center justify-center shadow-sm hover:shadow-md hover:border-gray-300 active:scale-95 transition-all"
-                  aria-label="Koleksi"
-                >
-
-                  <span className="text-lg leading-none">
-                    📚
-                  </span>
-
-                  <span className="text-[9px] font-semibold text-gray-500 mt-1">
-                    Koleksi
-                  </span>
-
-                </button>
-
-                {/* BELUM HAFAL */}
-
-                <button
-                  onClick={startUnlearnedMode}
-                  className="group bg-white border border-gray-200 rounded-2xl w-[54px] h-[54px] flex flex-col items-center justify-center shadow-sm hover:shadow-md hover:border-gray-300 active:scale-95 transition-all"
-                  aria-label="Belum Hafal"
-                >
-
-                  <span className="text-lg leading-none">
-                    🔄
-                  </span>
-
-                  <span className="text-[9px] font-semibold text-gray-500 mt-1">
-                    Belum
-                  </span>
-
-                </button>
-
-              </div>
+                    </button>
+                  )
+                }
+              )}
 
             </div>
 
-            {/* LOGOUT */}
+          </div>
 
-            <div className="flex justify-end mt-2">
+        </>
+      )}
 
-              <button
-                onClick={logout}
-                className="px-3 py-1.5 rounded-full bg-white border border-gray-200 text-[10px] font-semibold text-gray-500 hover:text-black hover:border-gray-300 active:scale-95 transition"
-              >
-                Keluar
-              </button>
+    </div>
 
-            </div>
+    {/* ========================================================
+        KOLEKSI
+    ========================================================= */}
 
-          </header>
+    <button
+      onClick={() => {
+        setUnlearnedOnly(false)
+        setShowCollection(true)
+      }}
+      className="bg-white border border-gray-200 rounded-2xl w-[54px] h-[54px] flex-shrink-0 flex flex-col items-center justify-center shadow-sm hover:shadow-md hover:border-gray-300 active:scale-95 transition-all"
+      aria-label="Koleksi"
+    >
+
+      <span className="text-lg leading-none">
+        📚
+      </span>
+
+      <span className="text-[9px] font-semibold text-gray-500 mt-1">
+        Koleksi
+      </span>
+
+    </button>
+
+    {/* ========================================================
+        BELUM HAFAL
+    ========================================================= */}
+
+    <button
+      onClick={startUnlearnedMode}
+      className="bg-white border border-gray-200 rounded-2xl w-[54px] h-[54px] flex-shrink-0 flex flex-col items-center justify-center shadow-sm hover:shadow-md hover:border-gray-300 active:scale-95 transition-all"
+      aria-label="Belum Hafal"
+    >
+
+      <span className="text-lg leading-none">
+        🔄
+      </span>
+
+      <span className="text-[9px] font-semibold text-gray-500 mt-1">
+        Belum
+      </span>
+
+    </button>
+
+    {/* ========================================================
+        KELUAR
+    ========================================================= */}
+
+    <button
+      onClick={logout}
+      className="bg-white border border-gray-200 rounded-2xl w-[54px] h-[54px] flex-shrink-0 flex flex-col items-center justify-center shadow-sm hover:shadow-md hover:border-gray-300 active:scale-95 transition-all"
+      aria-label="Keluar"
+    >
+
+      <span className="text-lg leading-none">
+        ↪
+      </span>
+
+      <span className="text-[9px] font-semibold text-gray-500 mt-1">
+        Keluar
+      </span>
+
+    </button>
+
+  </div>
+
+</header>
 
           {/* ============================================================
               PROGRESS
