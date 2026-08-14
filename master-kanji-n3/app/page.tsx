@@ -1218,7 +1218,7 @@ export default function Home() {
 
             {/* MODAL HEADER */}
 
-            <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+            <div className="px-5 pt-8 pb-5 border-b border-gray-100 flex items-center justify-between">
 
               <div>
 
