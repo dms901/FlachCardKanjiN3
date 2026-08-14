@@ -582,9 +582,7 @@ export default function Home() {
 
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-5 sm:py-8">
 
-        {/* ================================================================
-            HEADER
-        ================================================================= */}
+        {/* HEADER */}
 
         <div className="sticky top-0 z-30 bg-[#f7f8fc] pt-1 pb-3">
 
@@ -592,9 +590,7 @@ export default function Home() {
 
             <div className="flex items-center gap-2">
 
-              {/* ========================================================
-                  BAGIAN
-              ========================================================= */}
+              {/* BAGIAN */}
 
               <div className="relative flex-1 min-w-0">
 
@@ -792,9 +788,7 @@ export default function Home() {
 
               </div>
 
-              {/* ========================================================
-                  KOLEKSI
-              ========================================================= */}
+              {/* KOLEKSI */}
 
               <button
                 onClick={() => {
@@ -815,9 +809,7 @@ export default function Home() {
 
               </button>
 
-              {/* ========================================================
-                  BELUM
-              ========================================================= */}
+              {/* BELUM */}
 
               <button
                 onClick={startUnlearnedMode}
@@ -835,9 +827,7 @@ export default function Home() {
 
               </button>
 
-              {/* ========================================================
-                  KELUAR
-              ========================================================= */}
+              {/* KELUAR */}
 
               <button
                 onClick={logout}
@@ -903,9 +893,7 @@ export default function Home() {
 
         </div>
 
-        {/* ================================================================
-            MODE BELUM HAFAL
-        ================================================================= */}
+        {/* MODE BELUM HAFAL */}
 
         {unlearnedOnly && (
           <div className="mb-4 flex items-center justify-between bg-black text-white rounded-2xl px-4 py-3">
@@ -936,9 +924,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* ================================================================
-            CARD
-        ================================================================= */}
+        {/* CARD */}
 
         {currentKanji ? (
 
@@ -1201,9 +1187,7 @@ export default function Home() {
             }
           >
 
-            {/* ==========================================================
-                MODAL HEADER
-            =========================================================== */}
+            {/* MODAL HEADER */}
 
             <div className="flex-shrink-0 px-5 pt-10 pb-5 border-b border-gray-100 flex items-center justify-between">
 
@@ -1230,9 +1214,7 @@ export default function Home() {
 
             </div>
 
-            {/* ==========================================================
-                COLLECTION CONTENT
-            =========================================================== */}
+            {/* COLLECTION CONTENT */}
 
             <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 sm:px-5 py-4">
 
@@ -1303,9 +1285,34 @@ export default function Home() {
                             KANJI
                         ================================================== */}
 
-                        <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-white border border-gray-100 flex items-center justify-center">
+                        <div
+                          className="
+                            flex-shrink-0
+                            min-w-[56px]
+                            w-max
+                            max-w-none
+                            min-h-14
+                            rounded-xl
+                            bg-white
+                            border
+                            border-gray-100
+                            flex
+                            items-center
+                            justify-start
+                            px-2
+                            overflow-visible
+                          "
+                        >
 
-                          <span className="text-3xl leading-none whitespace-nowrap">
+                          <span
+                            className="
+                              text-3xl
+                              leading-none
+                              whitespace-nowrap
+                              font-normal
+                              block
+                            "
+                          >
                             {card.k}
                           </span>
 
@@ -1321,7 +1328,7 @@ export default function Home() {
                             Arti
                           </p>
 
-                          <p className="text-sm sm:text-base font-semibold text-gray-800 leading-snug whitespace-normal break-normal">
+                          <p className="text-sm sm:text-base font-semibold text-gray-800 leading-snug whitespace-normal break-words">
                             {card.m}
                           </p>
 
@@ -1362,9 +1369,7 @@ export default function Home() {
 
       )}
 
-      {/* ================================================================
-          ANIMATION STYLE
-      ================================================================= */}
+      {/* ANIMATION STYLE */}
 
       <style jsx global>{`
 
