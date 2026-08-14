@@ -1195,7 +1195,7 @@ export default function Home() {
         >
 
           <div
-            className="w-full max-w-2xl bg-white rounded-t-[30px] sm:rounded-[30px] max-h-[88vh] h-[88vh] sm:h-[82vh] shadow-2xl flex flex-col overflow-hidden animate-[modalUp_.35s_cubic-bezier(.22,1,.36,1)]"
+            className="w-full max-w-2xl bg-white rounded-t-[30px] sm:rounded-[30px] max-h-[88vh] h-[88dvh] shadow-2xl flex flex-col overflow-hidden animate-[modalUp_.35s_cubic-bezier(.22,1,.36,1)]"
             onClick={(e) =>
               e.stopPropagation()
             }
