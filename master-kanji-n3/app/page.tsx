@@ -11,9 +11,12 @@ const supabase = createClient(
 
 export default function Home() {
   const [user, setUser] = useState<any>(null)
+  const [profile, setProfile] = useState<any>(null)
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('login')
+  const [authMode, setAuthMode] =
+    useState<'login' | 'register'>('login')
 
   const [part, setPart] = useState(() => {
     return Object.keys(kanjiData)[0] || ''
@@ -26,15 +29,43 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
-  const [showCollection, setShowCollection] = useState(false)
+  const [showCollection, setShowCollection] =
+    useState(false)
 
-  const [unlearnedOnly, setUnlearnedOnly] = useState(false)
+  const [unlearnedOnly, setUnlearnedOnly] =
+    useState(false)
 
-  const [showParts, setShowParts] = useState(false)
+  const [showParts, setShowParts] =
+    useState(false)
 
-  const [changingPart, setChangingPart] = useState(false)
+  const [changingPart, setChangingPart] =
+    useState(false)
 
-  const allParts = kanjiData as Record<string, any[]>
+  /* ================================================================
+     ADMIN
+  ================================================================= */
+
+  const [showAdmin, setShowAdmin] =
+    useState(false)
+
+  const [adminUsers, setAdminUsers] =
+    useState<any[]>([])
+
+  const [adminLoading, setAdminLoading] =
+    useState(false)
+
+  const [adminActionLoading, setAdminActionLoading] =
+    useState<string | null>(null)
+
+  /* ================================================================
+     EMAIL VERIFICATION
+  ================================================================= */
+
+  const [resendingEmail, setResendingEmail] =
+    useState(false)
+
+  const allParts =
+    kanjiData as Record<string, any[]>
 
   /*
   |--------------------------------------------------------------------------
@@ -42,7 +73,8 @@ export default function Home() {
   |--------------------------------------------------------------------------
   */
 
-  const allCurrentCards = allParts[part] || []
+  const allCurrentCards =
+    allParts[part] || []
 
   const currentCards = allCurrentCards
     .map((card, index) => ({
@@ -57,9 +89,11 @@ export default function Home() {
       )
     })
 
-  const currentItem = currentCards[cardIndex]
+  const currentItem =
+    currentCards[cardIndex]
 
-  const currentKanji = currentItem?.card
+  const currentKanji =
+    currentItem?.card
 
   const currentOriginalIndex =
     currentItem?.originalIndex ?? 0
@@ -87,40 +121,111 @@ export default function Home() {
 
   /*
   |--------------------------------------------------------------------------
-  | AUTH
+  | LOAD PROFILE
+  |--------------------------------------------------------------------------
+  */
+
+  const loadProfile = async (
+    userId: string
+  ) => {
+    try {
+      const { data, error } =
+        await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single()
+
+      if (error) {
+        console.error(
+          'Gagal mengambil profile:',
+          error
+        )
+        return null
+      }
+
+      setProfile(data)
+
+      return data
+    } catch (error) {
+      console.error(error)
+      return null
+    }
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | AUTH INITIALIZE
   |--------------------------------------------------------------------------
   */
 
   useEffect(() => {
     const initialize = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
 
-      setUser(session?.user ?? null)
+        if (session?.user) {
+          setUser(session.user)
 
-      if (session?.user) {
-        await loadMastered(session.user.id)
+          const loadedProfile =
+            await loadProfile(
+              session.user.id
+            )
+
+          if (
+            loadedProfile?.status ===
+            'approved'
+          ) {
+            await loadMastered(
+              session.user.id
+            )
+          }
+        } else {
+          setUser(null)
+          setProfile(null)
+        }
+      } catch (error) {
+        console.error(error)
+      } finally {
+        setLoading(false)
       }
-
-      setLoading(false)
     }
 
     initialize()
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setUser(session?.user ?? null)
+    } =
+      supabase.auth.onAuthStateChange(
+        async (_event, session) => {
+          setUser(
+            session?.user ?? null
+          )
 
-        if (session?.user) {
-          await loadMastered(session.user.id)
-        } else {
-          setMastered([])
+          if (session?.user) {
+            const loadedProfile =
+              await loadProfile(
+                session.user.id
+              )
+
+            if (
+              loadedProfile?.status ===
+              'approved'
+            ) {
+              await loadMastered(
+                session.user.id
+              )
+            } else {
+              setMastered([])
+            }
+          } else {
+            setProfile(null)
+            setMastered([])
+          }
         }
-      }
-    )
+      )
 
     return () => {
       subscription.unsubscribe()
@@ -133,12 +238,20 @@ export default function Home() {
   |--------------------------------------------------------------------------
   */
 
-  const loadMastered = async (userId: string) => {
+  const loadMastered = async (
+    userId: string
+  ) => {
     try {
-      const { data, error } = await supabase
-        .from('kanji_progress')
-        .select('part, card_index')
-        .eq('user_id', userId)
+      const { data, error } =
+        await supabase
+          .from('kanji_progress')
+          .select(
+            'part, card_index'
+          )
+          .eq(
+            'user_id',
+            userId
+          )
 
       if (error) {
         console.error(error)
@@ -169,14 +282,28 @@ export default function Home() {
     e.preventDefault()
 
     if (!email || !password) {
-      alert('Email dan password harus diisi.')
+      alert(
+        'Email dan password harus diisi.'
+      )
+      return
+    }
+
+    if (
+      authMode === 'register' &&
+      password.length < 6
+    ) {
+      alert(
+        'Password minimal 6 karakter.'
+      )
       return
     }
 
     setLoading(true)
 
     try {
-      if (authMode === 'register') {
+      if (
+        authMode === 'register'
+      ) {
         const { data, error } =
           await supabase.auth.signUp({
             email,
@@ -187,21 +314,45 @@ export default function Home() {
 
         if (!data.session) {
           alert(
-            'Akun berhasil dibuat. Silakan cek email untuk verifikasi akun.'
+            'Akun berhasil dibuat.\n\nSilakan cek email kamu dan klik link verifikasi terlebih dahulu.'
           )
         } else {
-          alert('Akun berhasil dibuat!')
+          alert(
+            'Akun berhasil dibuat. Silakan menunggu persetujuan admin.'
+          )
         }
       } else {
-        const { error } =
-          await supabase.auth.signInWithPassword({
-            email,
-            password,
-          })
+        const { data, error } =
+          await supabase.auth.signInWithPassword(
+            {
+              email,
+              password,
+            }
+          )
 
         if (error) throw error
+
+        if (data.user) {
+          setUser(data.user)
+
+          const loadedProfile =
+            await loadProfile(
+              data.user.id
+            )
+
+          if (
+            loadedProfile?.status ===
+            'approved'
+          ) {
+            await loadMastered(
+              data.user.id
+            )
+          }
+        }
       }
     } catch (error: any) {
+      console.error(error)
+
       alert(
         error.message ||
           'Terjadi kesalahan.'
@@ -213,6 +364,40 @@ export default function Home() {
 
   /*
   |--------------------------------------------------------------------------
+  | RESEND VERIFICATION EMAIL
+  |--------------------------------------------------------------------------
+  */
+
+  const resendVerificationEmail =
+    async () => {
+      if (!user?.email) return
+
+      setResendingEmail(true)
+
+      try {
+        const { error } =
+          await supabase.auth.resend({
+            type: 'signup',
+            email: user.email,
+          })
+
+        if (error) throw error
+
+        alert(
+          'Email verifikasi sudah dikirim ulang. Silakan cek inbox email kamu.'
+        )
+      } catch (error: any) {
+        alert(
+          error.message ||
+            'Gagal mengirim ulang email verifikasi.'
+        )
+      } finally {
+        setResendingEmail(false)
+      }
+    }
+
+  /*
+  |--------------------------------------------------------------------------
   | LOGOUT
   |--------------------------------------------------------------------------
   */
@@ -221,10 +406,130 @@ export default function Home() {
     await supabase.auth.signOut()
 
     setUser(null)
+    setProfile(null)
     setMastered([])
     setCardIndex(0)
     setIsFlipped(false)
     setUnlearnedOnly(false)
+    setShowAdmin(false)
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | LOAD ADMIN USERS
+  |--------------------------------------------------------------------------
+  */
+
+  const loadAdminUsers = async () => {
+    if (
+      profile?.role !== 'admin'
+    ) {
+      return
+    }
+
+    setAdminLoading(true)
+
+    try {
+      const { data, error } =
+        await supabase
+          .from('profiles')
+          .select(
+            'id, email, role, status, created_at'
+          )
+          .order(
+            'created_at',
+            {
+              ascending: false,
+            }
+          )
+
+      if (error) throw error
+
+      setAdminUsers(
+        data || []
+      )
+    } catch (error: any) {
+      console.error(error)
+
+      alert(
+        error.message ||
+          'Gagal mengambil daftar akun.'
+      )
+    } finally {
+      setAdminLoading(false)
+    }
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | OPEN ADMIN
+  |--------------------------------------------------------------------------
+  */
+
+  const openAdmin = async () => {
+    if (
+      profile?.role !== 'admin'
+    ) {
+      return
+    }
+
+    setShowAdmin(true)
+
+    await loadAdminUsers()
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | ADMIN CHANGE STATUS
+  |--------------------------------------------------------------------------
+  */
+
+  const changeUserStatus = async (
+    userId: string,
+    newStatus:
+      | 'approved'
+      | 'rejected'
+      | 'pending'
+  ) => {
+    if (
+      profile?.role !== 'admin'
+    ) {
+      return
+    }
+
+    if (
+      userId === user?.id
+    ) {
+      alert(
+        'Kamu tidak dapat mengubah status akun admin yang sedang digunakan.'
+      )
+      return
+    }
+
+    setAdminActionLoading(userId)
+
+    try {
+      const { error } =
+        await supabase
+          .from('profiles')
+          .update({
+            status: newStatus,
+          })
+          .eq('id', userId)
+
+      if (error) throw error
+
+      await loadAdminUsers()
+    } catch (error: any) {
+      console.error(error)
+
+      alert(
+        error.message ||
+          'Gagal mengubah status akun.'
+      )
+    } finally {
+      setAdminActionLoading(null)
+    }
   }
 
   /*
@@ -234,7 +539,8 @@ export default function Home() {
   */
 
   const nextCard = () => {
-    if (!currentCards.length) return
+    if (!currentCards.length)
+      return
 
     setIsFlipped(false)
 
@@ -247,26 +553,32 @@ export default function Home() {
   }
 
   const prevCard = () => {
-    if (!currentCards.length) return
+    if (!currentCards.length)
+      return
 
     setIsFlipped(false)
 
     setCardIndex((prev) => {
       return (
-        (prev - 1 + currentCards.length) %
+        (prev -
+          1 +
+          currentCards.length) %
         currentCards.length
       )
     })
   }
 
   const shuffle = () => {
-    if (!currentCards.length) return
+    if (!currentCards.length)
+      return
 
     setIsFlipped(false)
 
-    let randomIndex = Math.floor(
-      Math.random() * currentCards.length
-    )
+    let randomIndex =
+      Math.floor(
+        Math.random() *
+          currentCards.length
+      )
 
     if (
       currentCards.length > 1 &&
@@ -286,7 +598,9 @@ export default function Home() {
   |--------------------------------------------------------------------------
   */
 
-  const changePart = (newPart: string) => {
+  const changePart = (
+    newPart: string
+  ) => {
     if (newPart === part) {
       setShowParts(false)
       return
@@ -313,91 +627,128 @@ export default function Home() {
   |--------------------------------------------------------------------------
   */
 
-  const toggleMastered = async () => {
-    if (!user || !currentKanji) return
+  const toggleMastered =
+    async () => {
+      if (
+        !user ||
+        !currentKanji
+      )
+        return
 
-    const id =
-      `${part}-${currentOriginalIndex}`
+      const id =
+        `${part}-${currentOriginalIndex}`
 
-    setSaving(true)
+      setSaving(true)
 
-    try {
-      if (mastered.includes(id)) {
-        const { error } = await supabase
-          .from('kanji_progress')
-          .delete()
-          .eq('user_id', user.id)
-          .eq('part', part)
-          .eq(
-            'card_index',
-            currentOriginalIndex
+      try {
+        if (
+          mastered.includes(id)
+        ) {
+          const { error } =
+            await supabase
+              .from(
+                'kanji_progress'
+              )
+              .delete()
+              .eq(
+                'user_id',
+                user.id
+              )
+              .eq(
+                'part',
+                part
+              )
+              .eq(
+                'card_index',
+                currentOriginalIndex
+              )
+
+          if (error) throw error
+
+          setMastered((prev) =>
+            prev.filter(
+              (item) =>
+                item !== id
+            )
           )
+
+          return
+        }
+
+        const { error } =
+          await supabase
+            .from(
+              'kanji_progress'
+            )
+            .insert({
+              user_id:
+                user.id,
+              part: part,
+              card_index:
+                currentOriginalIndex,
+            })
 
         if (error) throw error
 
-        setMastered((prev) =>
-          prev.filter(
-            (item) => item !== id
-          )
+        const updatedMastered =
+          [
+            ...mastered,
+            id,
+          ]
+
+        setMastered(
+          updatedMastered
         )
 
-        return
-      }
+        if (unlearnedOnly) {
+          const remainingCards =
+            allCurrentCards
+              .map(
+                (
+                  card,
+                  index
+                ) => ({
+                  card,
+                  originalIndex:
+                    index,
+                })
+              )
+              .filter(
+                ({
+                  originalIndex,
+                }) =>
+                  !updatedMastered.includes(
+                    `${part}-${originalIndex}`
+                  )
+              )
 
-      const { error } = await supabase
-        .from('kanji_progress')
-        .insert({
-          user_id: user.id,
-          part: part,
-          card_index: currentOriginalIndex,
-        })
+          setIsFlipped(false)
 
-      if (error) throw error
-
-      const updatedMastered = [
-        ...mastered,
-        id,
-      ]
-
-      setMastered(updatedMastered)
-
-      if (unlearnedOnly) {
-        const remainingCards =
-          allCurrentCards
-            .map((card, index) => ({
-              card,
-              originalIndex: index,
-            }))
-            .filter(
-              ({ originalIndex }) =>
-                !updatedMastered.includes(
-                  `${part}-${originalIndex}`
+          if (
+            remainingCards.length ===
+            0
+          ) {
+            setCardIndex(0)
+          } else {
+            setCardIndex(
+              (prev) =>
+                Math.min(
+                  prev,
+                  remainingCards.length -
+                    1
                 )
             )
-
-        setIsFlipped(false)
-
-        if (remainingCards.length === 0) {
-          setCardIndex(0)
-        } else {
-          setCardIndex((prev) =>
-            Math.min(
-              prev,
-              remainingCards.length - 1
-            )
-          )
+          }
         }
+      } catch (error: any) {
+        alert(
+          error.message ||
+            'Gagal menyimpan progress.'
+        )
+      } finally {
+        setSaving(false)
       }
-
-    } catch (error: any) {
-      alert(
-        error.message ||
-          'Gagal menyimpan progress.'
-      )
-    } finally {
-      setSaving(false)
     }
-  }
 
   /*
   |--------------------------------------------------------------------------
@@ -405,29 +756,33 @@ export default function Home() {
   |--------------------------------------------------------------------------
   */
 
-  const startUnlearnedMode = () => {
-    const unlearnedCards =
-      allCurrentCards.filter(
-        (_, index) =>
-          !mastered.includes(
-            `${part}-${index}`
-          )
-      )
+  const startUnlearnedMode =
+    () => {
+      const unlearnedCards =
+        allCurrentCards.filter(
+          (_, index) =>
+            !mastered.includes(
+              `${part}-${index}`
+            )
+        )
 
-    if (unlearnedCards.length === 0) {
-      alert(
-        `🎉 Semua kanji Bagian ${part.replace(
-          'part',
-          ''
-        )} sudah hafal!`
-      )
-      return
+      if (
+        unlearnedCards.length ===
+        0
+      ) {
+        alert(
+          `🎉 Semua kanji Bagian ${part.replace(
+            'part',
+            ''
+          )} sudah hafal!`
+        )
+        return
+      }
+
+      setUnlearnedOnly(true)
+      setCardIndex(0)
+      setIsFlipped(false)
     }
-
-    setUnlearnedOnly(true)
-    setCardIndex(0)
-    setIsFlipped(false)
-  }
 
   /*
   |--------------------------------------------------------------------------
@@ -438,31 +793,26 @@ export default function Home() {
   if (loading) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-[#f7f8fc]">
-
         <div className="text-center animate-pulse">
-
           <div className="w-10 h-10 border-4 border-gray-200 border-t-black rounded-full animate-spin mx-auto mb-4" />
 
           <p className="text-sm text-gray-500">
             Memuat Master Kanji...
           </p>
-
         </div>
-
       </main>
     )
   }
 
   /*
   |--------------------------------------------------------------------------
-  | LOGIN
+  | NOT LOGGED IN
   |--------------------------------------------------------------------------
   */
 
   if (!user) {
     return (
       <main className="min-h-screen bg-[#f7f8fc] flex items-center justify-center px-5 py-10">
-
         <div className="w-full max-w-md">
 
           <div className="bg-white rounded-[28px] shadow-xl shadow-black/5 p-7 sm:p-9 border border-gray-100">
@@ -498,7 +848,9 @@ export default function Home() {
                   type="email"
                   value={email}
                   onChange={(e) =>
-                    setEmail(e.target.value)
+                    setEmail(
+                      e.target.value
+                    )
                   }
                   placeholder="nama@email.com"
                   autoComplete="email"
@@ -517,11 +869,14 @@ export default function Home() {
                   type="password"
                   value={password}
                   onChange={(e) =>
-                    setPassword(e.target.value)
+                    setPassword(
+                      e.target.value
+                    )
                   }
                   placeholder="••••••••"
                   autoComplete={
-                    authMode === 'login'
+                    authMode ===
+                    'login'
                       ? 'current-password'
                       : 'new-password'
                   }
@@ -537,7 +892,8 @@ export default function Home() {
               >
                 {loading
                   ? 'Memproses...'
-                  : authMode === 'login'
+                  : authMode ===
+                    'login'
                     ? 'Masuk'
                     : 'Buat Akun'}
               </button>
@@ -547,14 +903,16 @@ export default function Home() {
             <button
               onClick={() =>
                 setAuthMode(
-                  authMode === 'login'
+                  authMode ===
+                    'login'
                     ? 'register'
                     : 'login'
                 )
               }
               className="w-full mt-5 text-sm text-gray-500 hover:text-black transition"
             >
-              {authMode === 'login'
+              {authMode ===
+              'login'
                 ? 'Belum punya akun? Daftar'
                 : 'Sudah punya akun? Masuk'}
             </button>
@@ -564,6 +922,698 @@ export default function Home() {
           <p className="text-center text-xs text-gray-400 mt-6">
             Master Kanji • N3
           </p>
+
+        </div>
+      </main>
+    )
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | EMAIL BELUM DIVERIFIKASI
+  |--------------------------------------------------------------------------
+  */
+
+  if (
+    user &&
+    !user.email_confirmed_at
+  ) {
+    return (
+      <main className="min-h-screen bg-[#f7f8fc] flex items-center justify-center px-5 py-10">
+
+        <div className="w-full max-w-md">
+
+          <div className="bg-white rounded-[28px] shadow-xl shadow-black/5 p-7 sm:p-9 border border-gray-100 text-center">
+
+            <div className="w-16 h-16 bg-black text-white rounded-2xl flex items-center justify-center text-3xl mx-auto mb-5">
+              ✉️
+            </div>
+
+            <h1 className="text-xl font-bold text-gray-900">
+              Verifikasi Email
+            </h1>
+
+            <p className="text-sm text-gray-500 mt-3 leading-relaxed">
+              Kami sudah mengirimkan email verifikasi ke:
+            </p>
+
+            <p className="font-semibold text-gray-900 mt-2 break-all">
+              {user.email}
+            </p>
+
+            <p className="text-xs text-gray-400 mt-4 leading-relaxed">
+              Silakan buka email tersebut dan klik link verifikasi sebelum melanjutkan.
+            </p>
+
+            <button
+              onClick={
+                resendVerificationEmail
+              }
+              disabled={
+                resendingEmail
+              }
+              className="w-full mt-6 bg-black text-white py-3.5 rounded-2xl font-semibold active:scale-[0.98] transition disabled:opacity-50"
+            >
+              {resendingEmail
+                ? 'Mengirim...'
+                : 'Kirim Ulang Email'}
+            </button>
+
+            <button
+              onClick={logout}
+              className="w-full mt-3 py-3 text-sm text-gray-500 hover:text-black transition"
+            >
+              Keluar
+            </button>
+
+          </div>
+
+        </div>
+
+      </main>
+    )
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | PROFILE BELUM TERSEDIA
+  |--------------------------------------------------------------------------
+  */
+
+  if (!profile) {
+    return (
+      <main className="min-h-screen bg-[#f7f8fc] flex items-center justify-center px-5">
+
+        <div className="text-center">
+
+          <div className="w-10 h-10 border-4 border-gray-200 border-t-black rounded-full animate-spin mx-auto mb-4" />
+
+          <p className="text-sm text-gray-500">
+            Menyiapkan akun...
+          </p>
+
+          <button
+            onClick={logout}
+            className="mt-5 text-xs text-gray-400"
+          >
+            Keluar
+          </button>
+
+        </div>
+
+      </main>
+    )
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | PENDING APPROVAL
+  |--------------------------------------------------------------------------
+  */
+
+  if (
+    profile.status ===
+    'pending'
+  ) {
+    return (
+      <main className="min-h-screen bg-[#f7f8fc] flex items-center justify-center px-5 py-10">
+
+        <div className="w-full max-w-md">
+
+          <div className="bg-white rounded-[28px] shadow-xl shadow-black/5 p-7 sm:p-9 border border-gray-100 text-center">
+
+            <div className="w-16 h-16 bg-yellow-50 border border-yellow-100 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-5">
+              ⏳
+            </div>
+
+            <h1 className="text-xl font-bold text-gray-900">
+              Menunggu Persetujuan
+            </h1>
+
+            <p className="text-sm text-gray-500 mt-3 leading-relaxed">
+              Email kamu sudah terverifikasi.
+            </p>
+
+            <p className="text-sm text-gray-500 mt-1 leading-relaxed">
+              Sekarang akun kamu sedang menunggu persetujuan dari admin.
+            </p>
+
+            <div className="bg-gray-50 rounded-2xl p-4 mt-6 text-left">
+
+              <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">
+                Akun
+              </p>
+
+              <p className="text-sm font-semibold text-gray-800 mt-1 break-all">
+                {user.email}
+              </p>
+
+              <div className="mt-4 flex items-center gap-2">
+
+                <div className="w-2 h-2 bg-yellow-400 rounded-full" />
+
+                <span className="text-xs font-medium text-gray-500">
+                  Menunggu persetujuan admin
+                </span>
+
+              </div>
+
+            </div>
+
+            <button
+              onClick={async () => {
+                const updated =
+                  await loadProfile(
+                    user.id
+                  )
+
+                if (
+                  updated?.status ===
+                  'approved'
+                ) {
+                  await loadMastered(
+                    user.id
+                  )
+                } else {
+                  alert(
+                    'Akun kamu masih menunggu persetujuan admin.'
+                  )
+                }
+              }}
+              className="w-full mt-6 bg-black text-white py-3.5 rounded-2xl font-semibold active:scale-[0.98] transition"
+            >
+              Cek Status
+            </button>
+
+            <button
+              onClick={logout}
+              className="w-full mt-3 py-3 text-sm text-gray-500 hover:text-black transition"
+            >
+              Keluar
+            </button>
+
+          </div>
+
+        </div>
+
+      </main>
+    )
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | REJECTED
+  |--------------------------------------------------------------------------
+  */
+
+  if (
+    profile.status ===
+    'rejected'
+  ) {
+    return (
+      <main className="min-h-screen bg-[#f7f8fc] flex items-center justify-center px-5 py-10">
+
+        <div className="w-full max-w-md">
+
+          <div className="bg-white rounded-[28px] shadow-xl shadow-black/5 p-7 sm:p-9 border border-gray-100 text-center">
+
+            <div className="w-16 h-16 bg-red-50 border border-red-100 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-5">
+              ✕
+            </div>
+
+            <h1 className="text-xl font-bold text-gray-900">
+              Akun Tidak Disetujui
+            </h1>
+
+            <p className="text-sm text-gray-500 mt-3 leading-relaxed">
+              Maaf, akun kamu belum disetujui oleh admin.
+            </p>
+
+            <p className="text-xs text-gray-400 mt-3 leading-relaxed">
+              Jika menurut kamu ini adalah kesalahan, silakan hubungi administrator aplikasi.
+            </p>
+
+            <button
+              onClick={logout}
+              className="w-full mt-6 bg-black text-white py-3.5 rounded-2xl font-semibold active:scale-[0.98] transition"
+            >
+              Keluar
+            </button>
+
+          </div>
+
+        </div>
+
+      </main>
+    )
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | ADMIN PAGE
+  |--------------------------------------------------------------------------
+  */
+
+  if (
+    showAdmin &&
+    profile.role === 'admin'
+  ) {
+    const pendingUsers =
+      adminUsers.filter(
+        (item) =>
+          item.status ===
+          'pending'
+      )
+
+    const approvedUsers =
+      adminUsers.filter(
+        (item) =>
+          item.status ===
+          'approved'
+      )
+
+    const rejectedUsers =
+      adminUsers.filter(
+        (item) =>
+          item.status ===
+          'rejected'
+      )
+
+    return (
+      <main className="min-h-screen bg-[#f7f8fc] text-gray-900">
+
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-5 sm:py-8">
+
+          {/* ADMIN HEADER */}
+
+          <div className="flex items-center justify-between mb-6">
+
+            <div>
+
+              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                Administrator
+              </p>
+
+              <h1 className="text-2xl font-bold mt-1">
+                Persetujuan Akun
+              </h1>
+
+            </div>
+
+            <button
+              onClick={() =>
+                setShowAdmin(false)
+              }
+              className="w-11 h-11 bg-white border border-gray-200 rounded-2xl flex items-center justify-center text-gray-500 hover:bg-gray-100 active:scale-95 transition"
+            >
+              ✕
+            </button>
+
+          </div>
+
+          {/* ADMIN INFO */}
+
+          <div className="bg-black text-white rounded-3xl p-5 mb-5">
+
+            <p className="text-xs text-white/50">
+              Login sebagai admin
+            </p>
+
+            <p className="font-semibold text-sm mt-1 break-all">
+              {user.email}
+            </p>
+
+            <div className="grid grid-cols-3 gap-2 mt-5">
+
+              <div className="bg-white/10 rounded-2xl p-3">
+                <p className="text-2xl font-bold">
+                  {pendingUsers.length}
+                </p>
+                <p className="text-[10px] text-white/50 mt-1">
+                  Menunggu
+                </p>
+              </div>
+
+              <div className="bg-white/10 rounded-2xl p-3">
+                <p className="text-2xl font-bold">
+                  {approvedUsers.length}
+                </p>
+                <p className="text-[10px] text-white/50 mt-1">
+                  Disetujui
+                </p>
+              </div>
+
+              <div className="bg-white/10 rounded-2xl p-3">
+                <p className="text-2xl font-bold">
+                  {rejectedUsers.length}
+                </p>
+                <p className="text-[10px] text-white/50 mt-1">
+                  Ditolak
+                </p>
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* REFRESH */}
+
+          <button
+            onClick={
+              loadAdminUsers
+            }
+            disabled={
+              adminLoading
+            }
+            className="w-full bg-white border border-gray-200 py-3 rounded-2xl text-sm font-semibold mb-5 hover:border-gray-300 active:scale-[0.98] transition disabled:opacity-50"
+          >
+            {adminLoading
+              ? 'Memuat...'
+              : '↻ Perbarui Daftar'}
+          </button>
+
+          {adminLoading &&
+          adminUsers.length ===
+            0 ? (
+
+            <div className="bg-white rounded-3xl p-10 text-center">
+              <div className="w-9 h-9 border-4 border-gray-200 border-t-black rounded-full animate-spin mx-auto mb-4" />
+
+              <p className="text-sm text-gray-500">
+                Memuat akun...
+              </p>
+            </div>
+
+          ) : (
+
+            <div className="space-y-6">
+
+              {/* ========================================================
+                  PENDING
+              ========================================================= */}
+
+              <section>
+
+                <div className="flex items-center justify-between mb-3 px-1">
+
+                  <div>
+
+                    <h2 className="font-bold text-base">
+                      Menunggu Persetujuan
+                    </h2>
+
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      Akun yang sudah mendaftar
+                    </p>
+
+                  </div>
+
+                  <span className="bg-yellow-50 text-yellow-600 border border-yellow-100 px-2.5 py-1 rounded-full text-[10px] font-bold">
+                    {pendingUsers.length}
+                  </span>
+
+                </div>
+
+                {pendingUsers.length ===
+                0 ? (
+
+                  <div className="bg-white border border-gray-100 rounded-3xl p-7 text-center">
+
+                    <div className="text-3xl mb-3">
+                      ✓
+                    </div>
+
+                    <p className="font-semibold text-gray-700 text-sm">
+                      Tidak ada pendaftar baru
+                    </p>
+
+                    <p className="text-xs text-gray-400 mt-1">
+                      Semua akun sudah diproses.
+                    </p>
+
+                  </div>
+
+                ) : (
+
+                  <div className="space-y-3">
+
+                    {pendingUsers.map(
+                      (adminUser) => (
+
+                        <div
+                          key={
+                            adminUser.id
+                          }
+                          className="bg-white border border-gray-100 rounded-3xl p-4 shadow-sm"
+                        >
+
+                          <div className="flex items-start gap-3">
+
+                            <div className="w-11 h-11 bg-yellow-50 border border-yellow-100 rounded-2xl flex items-center justify-center flex-shrink-0">
+                              👤
+                            </div>
+
+                            <div className="flex-1 min-w-0">
+
+                              <p className="font-semibold text-sm text-gray-800 break-all">
+                                {
+                                  adminUser.email
+                                }
+                              </p>
+
+                              <p className="text-[10px] text-gray-400 mt-1">
+                                Terdaftar{' '}
+                                {adminUser.created_at
+                                  ? new Date(
+                                      adminUser.created_at
+                                    ).toLocaleDateString(
+                                      'id-ID',
+                                      {
+                                        day: 'numeric',
+                                        month: 'short',
+                                        year: 'numeric',
+                                      }
+                                    )
+                                  : '-'}
+                              </p>
+
+                            </div>
+
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2 mt-4">
+
+                            <button
+                              onClick={() =>
+                                changeUserStatus(
+                                  adminUser.id,
+                                  'approved'
+                                )
+                              }
+                              disabled={
+                                adminActionLoading ===
+                                adminUser.id
+                              }
+                              className="bg-green-500 text-white py-3 rounded-2xl text-xs font-bold active:scale-95 transition disabled:opacity-50"
+                            >
+                              {adminActionLoading ===
+                              adminUser.id
+                                ? '...'
+                                : '✓ Setujui'}
+                            </button>
+
+                            <button
+                              onClick={() =>
+                                changeUserStatus(
+                                  adminUser.id,
+                                  'rejected'
+                                )
+                              }
+                              disabled={
+                                adminActionLoading ===
+                                adminUser.id
+                              }
+                              className="bg-red-50 text-red-600 border border-red-100 py-3 rounded-2xl text-xs font-bold active:scale-95 transition disabled:opacity-50"
+                            >
+                              ✕ Tolak
+                            </button>
+
+                          </div>
+
+                        </div>
+
+                      )
+                    )}
+
+                  </div>
+
+                )}
+
+              </section>
+
+              {/* ========================================================
+                  APPROVED
+              ========================================================= */}
+
+              <section>
+
+                <div className="flex items-center justify-between mb-3 px-1">
+
+                  <h2 className="font-bold text-base">
+                    Akun Disetujui
+                  </h2>
+
+                  <span className="bg-green-50 text-green-600 border border-green-100 px-2.5 py-1 rounded-full text-[10px] font-bold">
+                    {approvedUsers.length}
+                  </span>
+
+                </div>
+
+                <div className="space-y-2">
+
+                  {approvedUsers.map(
+                    (adminUser) => (
+
+                      <div
+                        key={
+                          adminUser.id
+                        }
+                        className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center gap-3"
+                      >
+
+                        <div className="w-9 h-9 bg-green-50 rounded-xl flex items-center justify-center text-sm flex-shrink-0">
+                          ✓
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+
+                          <p className="text-sm font-semibold break-all">
+                            {
+                              adminUser.email
+                            }
+                          </p>
+
+                          <p className="text-[10px] text-green-500 mt-0.5 font-medium">
+                            Aktif
+                          </p>
+
+                        </div>
+
+                      </div>
+
+                    )
+                  )}
+
+                </div>
+
+              </section>
+
+              {/* ========================================================
+                  REJECTED
+              ========================================================= */}
+
+              <section>
+
+                <div className="flex items-center justify-between mb-3 px-1">
+
+                  <h2 className="font-bold text-base">
+                    Akun Ditolak
+                  </h2>
+
+                  <span className="bg-red-50 text-red-500 border border-red-100 px-2.5 py-1 rounded-full text-[10px] font-bold">
+                    {rejectedUsers.length}
+                  </span>
+
+                </div>
+
+                {rejectedUsers.length ===
+                0 ? (
+
+                  <div className="bg-white border border-gray-100 rounded-2xl p-5 text-center">
+
+                    <p className="text-xs text-gray-400">
+                      Belum ada akun yang ditolak.
+                    </p>
+
+                  </div>
+
+                ) : (
+
+                  <div className="space-y-2">
+
+                    {rejectedUsers.map(
+                      (adminUser) => (
+
+                        <div
+                          key={
+                            adminUser.id
+                          }
+                          className="bg-white border border-gray-100 rounded-2xl p-4"
+                        >
+
+                          <div className="flex items-center gap-3">
+
+                            <div className="w-9 h-9 bg-red-50 rounded-xl flex items-center justify-center text-sm flex-shrink-0">
+                              ✕
+                            </div>
+
+                            <div className="flex-1 min-w-0">
+
+                              <p className="text-sm font-semibold break-all">
+                                {
+                                  adminUser.email
+                                }
+                              </p>
+
+                              <p className="text-[10px] text-red-400 mt-0.5">
+                                Ditolak
+                              </p>
+
+                            </div>
+
+                          </div>
+
+                          <button
+                            onClick={() =>
+                              changeUserStatus(
+                                adminUser.id,
+                                'approved'
+                              )
+                            }
+                            disabled={
+                              adminActionLoading ===
+                              adminUser.id
+                            }
+                            className="w-full mt-3 bg-black text-white py-2.5 rounded-xl text-xs font-semibold active:scale-[0.98] transition disabled:opacity-50"
+                          >
+                            {adminActionLoading ===
+                            adminUser.id
+                              ? 'Memproses...'
+                              : 'Setujui Akun Ini'}
+                          </button>
+
+                        </div>
+
+                      )
+                    )}
+
+                  </div>
+
+                )}
+
+              </section>
+
+            </div>
+
+          )}
+
+          <footer className="text-center mt-8 pb-5">
+
+            <p className="text-[10px] tracking-widest text-gray-300 font-semibold">
+              MASTER KANJI N3 @by DIMAS M
+            </p>
+
+          </footer>
 
         </div>
 
@@ -600,13 +1650,18 @@ export default function Home() {
 
                 <button
                   onClick={() =>
-                    setShowParts(!showParts)
+                    setShowParts(
+                      !showParts
+                    )
                   }
                   className="w-full h-[54px] flex items-center gap-2 bg-white border border-gray-200 rounded-2xl px-2.5 shadow-sm hover:shadow-md hover:border-gray-300 active:scale-[0.98] transition-all"
                 >
 
                   <div className="w-9 h-9 rounded-xl bg-black text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
-                    {part.replace('part', '')}
+                    {part.replace(
+                      'part',
+                      ''
+                    )}
                   </div>
 
                   <div className="flex items-center gap-1.5 min-w-0">
@@ -616,7 +1671,10 @@ export default function Home() {
                     </p>
 
                     <p className="text-base font-bold leading-none">
-                      {part.replace('part', '')}
+                      {part.replace(
+                        'part',
+                        ''
+                      )}
                     </p>
 
                   </div>
@@ -641,7 +1699,9 @@ export default function Home() {
                     <div
                       className="fixed inset-0 z-30"
                       onClick={() =>
-                        setShowParts(false)
+                        setShowParts(
+                          false
+                        )
                       }
                     />
 
@@ -664,10 +1724,15 @@ export default function Home() {
                         {Object.keys(
                           kanjiData
                         ).map(
-                          (p, index) => {
+                          (
+                            p,
+                            index
+                          ) => {
 
                             const cards =
-                              allParts[p] || []
+                              allParts[
+                                p
+                              ] || []
 
                             const learned =
                               mastered.filter(
@@ -678,7 +1743,8 @@ export default function Home() {
                               ).length
 
                             const percentage =
-                              cards.length > 0
+                              cards.length >
+                              0
                                 ? Math.round(
                                     (learned /
                                       cards.length) *
@@ -687,13 +1753,18 @@ export default function Home() {
                                 : 0
 
                             const selected =
-                              p === part
+                              p ===
+                              part
 
                             return (
                               <button
-                                key={p}
+                                key={
+                                  p
+                                }
                                 onClick={() =>
-                                  changePart(p)
+                                  changePart(
+                                    p
+                                  )
                                 }
                                 className={`w-full flex items-center gap-3 p-3 rounded-2xl text-left transition-all duration-200 ${
                                   selected
@@ -709,7 +1780,8 @@ export default function Home() {
                                       : 'bg-gray-100 text-gray-700'
                                   }`}
                                 >
-                                  {index + 1}
+                                  {index +
+                                    1}
                                 </div>
 
                                 <div className="flex-1 min-w-0">
@@ -717,7 +1789,9 @@ export default function Home() {
                                   <div className="flex items-center justify-between">
 
                                     <p className="font-bold text-sm">
-                                      Bagian {index + 1}
+                                      Bagian{' '}
+                                      {index +
+                                        1}
                                     </p>
 
                                     {percentage ===
@@ -742,7 +1816,12 @@ export default function Home() {
                                         : 'text-gray-400'
                                     }`}
                                   >
-                                    {learned} / {cards.length} hafal
+                                    {learned}{' '}
+                                    /{' '}
+                                    {
+                                      cards.length
+                                    }{' '}
+                                    hafal
                                   </p>
 
                                   <div
@@ -798,8 +1877,12 @@ export default function Home() {
 
               <button
                 onClick={() => {
-                  setUnlearnedOnly(false)
-                  setShowCollection(true)
+                  setUnlearnedOnly(
+                    false
+                  )
+                  setShowCollection(
+                    true
+                  )
                 }}
                 className="bg-white border border-gray-200 rounded-2xl w-[54px] h-[54px] flex-shrink-0 flex flex-col items-center justify-center shadow-sm hover:shadow-md hover:border-gray-300 active:scale-95 transition-all"
                 aria-label="Koleksi"
@@ -820,7 +1903,9 @@ export default function Home() {
               ========================================================= */}
 
               <button
-                onClick={startUnlearnedMode}
+                onClick={
+                  startUnlearnedMode
+                }
                 className="bg-white border border-gray-200 rounded-2xl w-[54px] h-[54px] flex-shrink-0 flex flex-col items-center justify-center shadow-sm hover:shadow-md hover:border-gray-300 active:scale-95 transition-all"
                 aria-label="Belum Hafal"
               >
@@ -834,6 +1919,33 @@ export default function Home() {
                 </span>
 
               </button>
+
+              {/* ========================================================
+                  ADMIN
+              ========================================================= */}
+
+              {profile.role ===
+                'admin' && (
+
+                <button
+                  onClick={
+                    openAdmin
+                  }
+                  className="bg-black text-white border border-black rounded-2xl w-[54px] h-[54px] flex-shrink-0 flex flex-col items-center justify-center shadow-sm hover:bg-gray-800 active:scale-95 transition-all"
+                  aria-label="Admin"
+                >
+
+                  <span className="text-lg leading-none">
+                    🛡️
+                  </span>
+
+                  <span className="text-[9px] font-semibold text-white/70 mt-1">
+                    Admin
+                  </span>
+
+                </button>
+
+              )}
 
               {/* ========================================================
                   KELUAR
@@ -882,7 +1994,9 @@ export default function Home() {
 
                 {' / '}
 
-                {allCurrentCards.length}
+                {
+                  allCurrentCards.length
+                }
 
               </span>
 
@@ -924,7 +2038,9 @@ export default function Home() {
 
             <button
               onClick={() => {
-                setUnlearnedOnly(false)
+                setUnlearnedOnly(
+                  false
+                )
                 setCardIndex(0)
                 setIsFlipped(false)
               }}
@@ -953,7 +2069,8 @@ export default function Home() {
             <div
               className="relative h-[430px] sm:h-[480px] cursor-pointer"
               style={{
-                perspective: '1200px',
+                perspective:
+                  '1200px',
               }}
               onClick={() =>
                 setIsFlipped(
@@ -988,8 +2105,12 @@ export default function Home() {
 
                     <span className="text-[10px] font-bold tracking-widest text-gray-300">
 
-                      {cardIndex + 1} /{' '}
-                      {currentCards.length}
+                      {cardIndex +
+                        1}{' '}
+                      /{' '}
+                      {
+                        currentCards.length
+                      }
 
                     </span>
 
@@ -1002,7 +2123,9 @@ export default function Home() {
                   )}
 
                   <div className="text-[clamp(60px,12vw,80px)] leading-none font-medium select-none transition-transform duration-300 hover:scale-105">
-                    {currentKanji.k}
+                    {
+                      currentKanji.k
+                    }
                   </div>
 
                   <p className="mt-10 text-xs text-gray-400 tracking-widest uppercase">
@@ -1024,7 +2147,9 @@ export default function Home() {
                 >
 
                   <div className="text-[50px] leading-none">
-                    {currentKanji.k}
+                    {
+                      currentKanji.k
+                    }
                   </div>
 
                   <div className="text-center">
@@ -1034,7 +2159,9 @@ export default function Home() {
                     </p>
 
                     <p className="text-2xl font-semibold">
-                      {currentKanji.r}
+                      {
+                        currentKanji.r
+                      }
                     </p>
 
                   </div>
@@ -1048,7 +2175,9 @@ export default function Home() {
                     </p>
 
                     <p className="text-xl font-medium">
-                      {currentKanji.m}
+                      {
+                        currentKanji.m
+                      }
                     </p>
 
                   </div>
@@ -1069,8 +2198,12 @@ export default function Home() {
 
               <span className="text-xs text-gray-400">
 
-                {cardIndex + 1} dari{' '}
-                {currentCards.length}
+                {cardIndex +
+                  1}{' '}
+                dari{' '}
+                {
+                  currentCards.length
+                }
 
               </span>
 
@@ -1081,21 +2214,27 @@ export default function Home() {
             <div className="grid grid-cols-3 gap-3 mt-5">
 
               <button
-                onClick={prevCard}
+                onClick={
+                  prevCard
+                }
                 className="bg-white border border-gray-200 py-3.5 rounded-2xl font-semibold text-sm hover:border-gray-300 hover:-translate-y-0.5 active:scale-95 transition-all"
               >
                 ← Prev
               </button>
 
               <button
-                onClick={shuffle}
+                onClick={
+                  shuffle
+                }
                 className="bg-white border border-gray-200 py-3.5 rounded-2xl font-semibold text-sm hover:border-gray-300 hover:-translate-y-0.5 active:scale-95 transition-all"
               >
                 ⤨ Acak
               </button>
 
               <button
-                onClick={nextCard}
+                onClick={
+                  nextCard
+                }
                 className="bg-white border border-gray-200 py-3.5 rounded-2xl font-semibold text-sm hover:border-gray-300 hover:-translate-y-0.5 active:scale-95 transition-all"
               >
                 Next →
@@ -1106,8 +2245,12 @@ export default function Home() {
             {/* MASTERED */}
 
             <button
-              onClick={toggleMastered}
-              disabled={saving}
+              onClick={
+                toggleMastered
+              }
+              disabled={
+                saving
+              }
               className={`w-full mt-3 py-4 rounded-2xl font-bold text-sm transition-all active:scale-[0.97] ${
                 isMastered
                   ? 'bg-green-500 text-white shadow-lg shadow-green-500/20 scale-[1.01]'
@@ -1146,9 +2289,15 @@ export default function Home() {
 
                 <button
                   onClick={() => {
-                    setUnlearnedOnly(false)
-                    setCardIndex(0)
-                    setIsFlipped(false)
+                    setUnlearnedOnly(
+                      false
+                    )
+                    setCardIndex(
+                      0
+                    )
+                    setIsFlipped(
+                      false
+                    )
                   }}
                   className="mt-5 bg-black text-white px-5 py-3 rounded-2xl text-sm font-semibold"
                 >
@@ -1190,7 +2339,9 @@ export default function Home() {
         <div
           className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-5 animate-[fadeIn_.2s_ease-out]"
           onClick={() =>
-            setShowCollection(false)
+            setShowCollection(
+              false
+            )
           }
         >
 
@@ -1201,13 +2352,9 @@ export default function Home() {
             }
           >
 
-            {/* ==========================================================
-                MODAL HEADER
-            =========================================================== */}
+            {/* MODAL HEADER */}
 
             <div className="flex-shrink-0 bg-white px-5 pt-5 pb-4 sm:px-6 sm:pt-6 sm:pb-5 border-b border-gray-100">
-
-              {/* HANDLE MOBILE */}
 
               <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-5 sm:hidden" />
 
@@ -1228,7 +2375,10 @@ export default function Home() {
                       </h2>
 
                       <p className="text-xs text-gray-400 mt-0.5">
-                        {mastered.length} kanji sudah ditandai
+                        {
+                          mastered.length
+                        }{' '}
+                        kanji sudah ditandai
                       </p>
 
                     </div>
@@ -1239,7 +2389,9 @@ export default function Home() {
 
                 <button
                   onClick={() =>
-                    setShowCollection(false)
+                    setShowCollection(
+                      false
+                    )
                   }
                   className="w-10 h-10 flex-shrink-0 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200 hover:text-gray-700 active:scale-90 transition-all"
                   aria-label="Tutup koleksi"
@@ -1251,13 +2403,12 @@ export default function Home() {
 
             </div>
 
-            {/* ==========================================================
-                COLLECTION CONTENT
-            =========================================================== */}
+            {/* COLLECTION CONTENT */}
 
             <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 sm:px-5 py-7">
 
-              {mastered.length === 0 ? (
+              {mastered.length ===
+              0 ? (
 
                 <div className="h-full flex flex-col items-center justify-center text-center px-6">
 
@@ -1279,114 +2430,122 @@ export default function Home() {
 
                 <div className="space-y-2.5">
 
-                  {mastered.map((id) => {
+                  {mastered.map(
+                    (id) => {
 
-                    const [
-                      savedPart,
-                      savedIndexString,
-                    ] = id.split('-')
+                      const [
+                        savedPart,
+                        savedIndexString,
+                      ] =
+                        id.split(
+                          '-'
+                        )
 
-                    const savedIndex =
-                      Number(
-                        savedIndexString
-                      )
+                      const savedIndex =
+                        Number(
+                          savedIndexString
+                        )
 
-                    const cards =
-                      allParts[
-                        savedPart
-                      ] || []
+                      const cards =
+                        allParts[
+                          savedPart
+                        ] || []
 
-                    const card =
-                      cards[savedIndex]
+                      const card =
+                        cards[
+                          savedIndex
+                        ]
 
-                    if (!card)
-                      return null
+                      if (!card)
+                        return null
 
-                    return (
+                      return (
 
-                      <button
-                        key={id}
-                        onClick={() => {
-                          setUnlearnedOnly(false)
-                          setPart(savedPart)
-                          setCardIndex(
-                            savedIndex
-                          )
-                          setIsFlipped(false)
-                          setShowCollection(
-                            false
-                          )
-                        }}
-                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-3 py-3 sm:px-4 sm:py-3.5 flex items-center gap-3 sm:gap-4 text-left hover:bg-gray-100 hover:border-gray-200 active:scale-[0.985] transition-all"
-                      >
+                        <button
+                          key={
+                            id
+                          }
+                          onClick={() => {
+                            setUnlearnedOnly(
+                              false
+                            )
+                            setPart(
+                              savedPart
+                            )
+                            setCardIndex(
+                              savedIndex
+                            )
+                            setIsFlipped(
+                              false
+                            )
+                            setShowCollection(
+                              false
+                            )
+                          }}
+                          className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-3 py-3 sm:px-4 sm:py-3.5 flex items-center gap-3 sm:gap-4 text-left hover:bg-gray-100 hover:border-gray-200 active:scale-[0.985] transition-all"
+                        >
 
-                        {/* ==================================================
-                            KANJI
-                        ================================================== */}
+                          <div className="flex-shrink-0 flex items-start justify-start min-w-fit max-w-[55%] pr-4">
 
-                        <div className="flex-shrink-0 flex items-start justify-start min-w-fit max-w-[55%] pr-4">
+                            <span className="text-[30px] sm:text-[32px] leading-none whitespace-nowrap">
+                              {
+                                card.k
+                              }
+                            </span>
 
-                          <span className="text-[30px] sm:text-[32px] leading-none whitespace-nowrap">
-                            {card.k}
-                          </span>
+                          </div>
 
-                        </div>
+                          <div className="flex-1 min-w-0">
 
-                        {/* ==================================================
-                            INFORMASI
-                        ================================================== */}
-
-                        <div className="flex-1 min-w-0">
-
-                          <p className="text-[9px] sm:text-[10px] uppercase tracking-[0.15em] text-gray-400 mb-1">
-                            Arti
-                          </p>
-
-                          <p className="text-sm sm:text-base font-semibold text-gray-800 leading-snug break-words">
-                            {card.m}
-                          </p>
-
-                          {card.r && (
-
-                            <p className="text-[11px] sm:text-xs text-gray-400 mt-1 leading-relaxed break-words">
-                              {card.r}
+                            <p className="text-[9px] sm:text-[10px] uppercase tracking-[0.15em] text-gray-400 mb-1">
+                              Arti
                             </p>
 
-                          )}
+                            <p className="text-sm sm:text-base font-semibold text-gray-800 leading-snug break-words">
+                              {
+                                card.m
+                              }
+                            </p>
 
-                          <p className="text-[9px] text-gray-300 mt-1.5">
-                            Bagian {savedPart.replace('part', '')}
-                          </p>
+                            {card.r && (
 
-                        </div>
+                              <p className="text-[11px] sm:text-xs text-gray-400 mt-1 leading-relaxed break-words">
+                                {
+                                  card.r
+                                }
+                              </p>
 
-                        {/* ==================================================
-                            TANDA HIJAU
-                        ================================================== */}
+                            )}
 
-                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-50 border border-green-100 flex items-center justify-center">
+                            <p className="text-[9px] text-gray-300 mt-1.5">
+                              Bagian{' '}
+                              {savedPart.replace(
+                                'part',
+                                ''
+                              )}
+                            </p>
 
-                          <span className="text-green-500 text-sm font-bold">
-                            ✓
-                          </span>
+                          </div>
 
-                        </div>
+                          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-50 border border-green-100 flex items-center justify-center">
 
-                      </button>
+                            <span className="text-green-500 text-sm font-bold">
+                              ✓
+                            </span>
 
-                    )
+                          </div>
 
-                  })}
+                        </button>
+
+                      )
+                    }
+                  )}
 
                 </div>
 
               )}
 
             </div>
-
-            {/* ==========================================================
-                BOTTOM SAFE AREA
-            =========================================================== */}
 
             <div className="flex-shrink-0 bg-white h-[env(safe-area-inset-bottom)]" />
 
