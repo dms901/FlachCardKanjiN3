@@ -38,6 +38,9 @@ export default function Home() {
   const [showParts, setShowParts] =
     useState(false)
 
+  const [showUserMenu, setShowUserMenu] =
+    useState(false)
+
   const [changingPart, setChangingPart] =
     useState(false)
 
@@ -412,6 +415,7 @@ export default function Home() {
     setIsFlipped(false)
     setUnlearnedOnly(false)
     setShowAdmin(false)
+    setShowUserMenu(false)
   }
 
   /*
@@ -1308,9 +1312,7 @@ export default function Home() {
 
             <div className="space-y-6">
 
-              {/* ========================================================
-                  PENDING
-              ========================================================= */}
+              {/* PENDING */}
 
               <section>
 
@@ -1451,9 +1453,7 @@ export default function Home() {
 
               </section>
 
-              {/* ========================================================
-                  APPROVED
-              ========================================================= */}
+              {/* APPROVED */}
 
               <section>
 
@@ -1508,9 +1508,7 @@ export default function Home() {
 
               </section>
 
-              {/* ========================================================
-                  REJECTED
-              ========================================================= */}
+              {/* REJECTED */}
 
               <section>
 
@@ -1921,51 +1919,136 @@ export default function Home() {
               </button>
 
               {/* ========================================================
-                  ADMIN
+                  MENU AKUN
               ========================================================= */}
 
-              {profile.role ===
-                'admin' && (
+              <div className="relative flex-shrink-0">
 
                 <button
-                  onClick={
-                    openAdmin
+                  onClick={() =>
+                    setShowUserMenu(
+                      !showUserMenu
+                    )
                   }
-                  className="bg-black text-white border border-black rounded-2xl w-[54px] h-[54px] flex-shrink-0 flex flex-col items-center justify-center shadow-sm hover:bg-gray-800 active:scale-95 transition-all"
-                  aria-label="Admin"
+                  className="bg-white border border-gray-200 rounded-2xl w-[54px] h-[54px] flex flex-col items-center justify-center shadow-sm hover:shadow-md hover:border-gray-300 active:scale-95 transition-all"
+                  aria-label="Menu akun"
                 >
 
                   <span className="text-lg leading-none">
-                    🛡️
+                    👤
                   </span>
 
-                  <span className="text-[9px] font-semibold text-white/70 mt-1">
-                    Admin
+                  <span className="text-[9px] font-semibold text-gray-500 mt-1">
+                    Menu
                   </span>
 
                 </button>
 
-              )}
+                {/* DROPDOWN MENU AKUN */}
 
-              {/* ========================================================
-                  KELUAR
-              ========================================================= */}
+                {showUserMenu && (
+                  <>
 
-              <button
-                onClick={logout}
-                className="bg-white border border-gray-200 rounded-2xl w-[54px] h-[54px] flex-shrink-0 flex flex-col items-center justify-center shadow-sm hover:shadow-md hover:border-gray-300 active:scale-95 transition-all"
-                aria-label="Keluar"
-              >
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() =>
+                        setShowUserMenu(
+                          false
+                        )
+                      }
+                    />
 
-                <span className="text-lg leading-none">
-                  ↪
-                </span>
+                    <div className="absolute z-50 top-full right-0 mt-3 w-[210px] bg-white rounded-3xl border border-gray-100 shadow-2xl shadow-black/10 p-2 animate-[dropdownIn_.22s_ease-out]">
 
-                <span className="text-[9px] font-semibold text-gray-500 mt-1">
-                  Keluar
-                </span>
+                      {/* INFO AKUN */}
 
-              </button>
+                      <div className="px-3 py-3 border-b border-gray-100 mb-1">
+
+                        <p className="text-[9px] uppercase tracking-widest font-bold text-gray-400">
+                          Akun
+                        </p>
+
+                        <p className="text-xs font-semibold text-gray-800 mt-1 break-all">
+                          {user.email}
+                        </p>
+
+                      </div>
+
+                      {/* ADMIN */}
+
+                      {profile.role ===
+                        'admin' && (
+
+                        <button
+                          onClick={() => {
+                            setShowUserMenu(
+                              false
+                            )
+                            openAdmin()
+                          }}
+                          className="w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-left hover:bg-gray-50 active:scale-[0.98] transition"
+                        >
+
+                          <div className="w-9 h-9 rounded-xl bg-black text-white flex items-center justify-center text-sm">
+                            🛡️
+                          </div>
+
+                          <div className="flex-1">
+
+                            <p className="text-sm font-semibold text-gray-800">
+                              Admin
+                            </p>
+
+                            <p className="text-[10px] text-gray-400 mt-0.5">
+                              Kelola akun pengguna
+                            </p>
+
+                          </div>
+
+                          <span className="text-gray-300">
+                            ›
+                          </span>
+
+                        </button>
+
+                      )}
+
+                      {/* KELUAR */}
+
+                      <button
+                        onClick={() => {
+                          setShowUserMenu(
+                            false
+                          )
+                          logout()
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-left hover:bg-red-50 active:scale-[0.98] transition"
+                      >
+
+                        <div className="w-9 h-9 rounded-xl bg-red-50 text-red-500 flex items-center justify-center text-sm">
+                          ↪
+                        </div>
+
+                        <div className="flex-1">
+
+                          <p className="text-sm font-semibold text-red-600">
+                            Keluar
+                          </p>
+
+                          <p className="text-[10px] text-gray-400 mt-0.5">
+                            Keluar dari akun
+                          </p>
+
+                        </div>
+
+                      </button>
+
+                    </div>
+
+                  </>
+                )}
+
+              </div>
 
             </div>
 
