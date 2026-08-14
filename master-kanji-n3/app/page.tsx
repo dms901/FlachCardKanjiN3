@@ -1152,7 +1152,7 @@ export default function Home() {
 
         )}
 
-        {/* BOTTOM MENU */}
+               {/* BOTTOM MENU */}
 
         <div className="grid grid-cols-2 gap-3 mt-6">
 
@@ -1163,52 +1163,67 @@ export default function Home() {
               setUnlearnedOnly(false)
               setShowCollection(true)
             }}
-            className="bg-white border border-gray-200 rounded-2xl p-4 text-left hover:border-gray-300 hover:-translate-y-0.5 active:scale-[0.98] transition-all"
+            className="bg-white border border-gray-200 rounded-2xl px-3.5 py-3.5 text-left hover:border-gray-300 hover:-translate-y-0.5 active:scale-[0.98] transition-all flex items-center gap-3"
           >
 
-            <div className="text-lg mb-1">
+            {/* ICON */}
+
+            <div className="text-xl flex-shrink-0">
               📚
             </div>
 
-            <p className="font-bold text-sm">
-              Koleksi
-            </p>
+            {/* TEXT */}
 
-            <p className="text-xs text-gray-400 mt-1">
-              {mastered.length} kanji sudah hafal
-            </p>
+            <div className="min-w-0">
+
+              <p className="font-bold text-sm leading-tight">
+                Koleksi
+              </p>
+
+              <p className="text-[11px] text-gray-400 mt-1 leading-tight">
+                {mastered.length} kanji sudah hafal
+              </p>
+
+            </div>
 
           </button>
+
 
           {/* BELUM HAFAL */}
 
           <button
             onClick={startUnlearnedMode}
-            className="bg-white border border-gray-200 rounded-2xl p-4 text-left hover:border-gray-300 hover:-translate-y-0.5 active:scale-[0.98] transition-all"
+            className="bg-white border border-gray-200 rounded-2xl px-3.5 py-3.5 text-left hover:border-gray-300 hover:-translate-y-0.5 active:scale-[0.98] transition-all flex items-center gap-3"
           >
 
-            <div className="text-lg mb-1">
+            {/* ICON */}
+
+            <div className="text-xl flex-shrink-0">
               🔄
             </div>
 
-            <p className="font-bold text-sm">
-              Belum Hafal
-            </p>
+            {/* TEXT */}
 
-            <p className="text-xs text-gray-400 mt-1">
+            <div className="min-w-0">
 
-              {
-                allCurrentCards.filter(
-                  (_, index) =>
-                    !mastered.includes(
-                      `${part}-${index}`
-                    )
-                ).length
-              }{' '}
+              <p className="font-bold text-sm leading-tight">
+                Belum Hafal
+              </p>
 
-              kartu belum hafal
+              <p className="text-[11px] text-gray-400 mt-1 leading-tight">
 
-            </p>
+                {
+                  allCurrentCards.filter(
+                    (_, index) =>
+                      !mastered.includes(
+                        `${part}-${index}`
+                      )
+                  ).length
+                } kartu belum hafal
+
+              </p>
+
+            </div>
 
           </button>
 
