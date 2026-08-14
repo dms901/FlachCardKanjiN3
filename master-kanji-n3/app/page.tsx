@@ -28,13 +28,10 @@ export default function Home() {
 
   const [showCollection, setShowCollection] = useState(false)
 
-  // MODE HANYA KANJI YANG BELUM HAFAL
   const [unlearnedOnly, setUnlearnedOnly] = useState(false)
 
-  // MENU BAGIAN
   const [showParts, setShowParts] = useState(false)
 
-  // ANIMASI GANTI BAGIAN
   const [changingPart, setChangingPart] = useState(false)
 
   const allParts = kanjiData as Record<string, any[]>
@@ -302,7 +299,6 @@ export default function Home() {
       setPart(newPart)
       setCardIndex(0)
       setIsFlipped(false)
-
       setUnlearnedOnly(false)
 
       setTimeout(() => {
@@ -326,9 +322,6 @@ export default function Home() {
     setSaving(true)
 
     try {
-
-      // HAPUS DARI MASTERED
-
       if (mastered.includes(id)) {
         const { error } = await supabase
           .from('kanji_progress')
@@ -351,8 +344,6 @@ export default function Home() {
         return
       }
 
-      // TAMBAHKAN KE MASTERED
-
       const { error } = await supabase
         .from('kanji_progress')
         .insert({
@@ -369,8 +360,6 @@ export default function Home() {
       ]
 
       setMastered(updatedMastered)
-
-      // JIKA MODE BELUM HAFAL
 
       if (unlearnedOnly) {
         const remainingCards =
@@ -594,290 +583,283 @@ export default function Home() {
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-5 sm:py-8">
 
         {/* ================================================================
-            HEADER + MENU ATAS
+            HEADER
         ================================================================= */}
 
-        <div className="sticky top-0 z-30 bg-[#f7f8fc] pt-1 pb-2">
+        <div className="sticky top-0 z-30 bg-[#f7f8fc] pt-1 pb-3">
 
-         <header className="mb-4">
+          <header className="mb-4">
 
-  <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
 
-    {/* ========================================================
-        MENU BAGIAN
-    ========================================================= */}
+              {/* ========================================================
+                  BAGIAN
+              ========================================================= */}
 
-    <div className="relative flex-1 min-w-0">
+              <div className="relative flex-1 min-w-0">
 
-      <button
-        onClick={() =>
-          setShowParts(!showParts)
-        }
-        className="w-full h-[54px] group flex items-center gap-2 bg-white border border-gray-200 rounded-2xl px-2.5 shadow-sm hover:shadow-md hover:border-gray-300 active:scale-[0.98] transition-all"
-      >
+                <button
+                  onClick={() =>
+                    setShowParts(!showParts)
+                  }
+                  className="w-full h-[54px] flex items-center gap-2 bg-white border border-gray-200 rounded-2xl px-2.5 shadow-sm hover:shadow-md hover:border-gray-300 active:scale-[0.98] transition-all"
+                >
 
-        {/* NOMOR BAGIAN */}
+                  <div className="w-9 h-9 rounded-xl bg-black text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
+                    {part.replace('part', '')}
+                  </div>
 
-        <div className="w-9 h-9 rounded-xl bg-black text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
-          {part.replace('part', '')}
-        </div>
+                  <div className="flex items-center gap-1.5 min-w-0">
 
-        {/* BAGIAN */}
+                    <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
+                      Bagian
+                    </p>
 
-        <div className="flex items-center gap-1.5 min-w-0">
+                    <p className="text-base font-bold leading-none">
+                      {part.replace('part', '')}
+                    </p>
 
-          <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
-            Bagian
-          </p>
+                  </div>
 
-          <p className="text-base font-bold leading-none">
-            {part.replace('part', '')}
-          </p>
+                  <span
+                    className={`ml-auto text-gray-400 transition-transform duration-300 ${
+                      showParts
+                        ? 'rotate-180'
+                        : ''
+                    }`}
+                  >
+                    ↓
+                  </span>
 
-        </div>
+                </button>
 
-        <span
-          className={`ml-auto text-gray-400 transition-transform duration-300 ${
-            showParts
-              ? 'rotate-180'
-              : ''
-          }`}
-        >
-          ↓
-        </span>
+                {/* DROPDOWN BAGIAN */}
 
-      </button>
+                {showParts && (
+                  <>
 
-      {/* ======================================================
-          DROPDOWN BAGIAN
-      ======================================================= */}
-
-      {showParts && (
-        <>
-
-          <div
-            className="fixed inset-0 z-30"
-            onClick={() =>
-              setShowParts(false)
-            }
-          />
-
-          <div className="absolute z-40 top-full left-0 mt-3 w-[280px] sm:w-[310px] bg-white rounded-3xl border border-gray-100 shadow-2xl shadow-black/10 p-2 animate-[dropdownIn_.22s_ease-out]">
-
-            <div className="px-4 pt-3 pb-2">
-
-              <p className="text-xs font-bold text-gray-900">
-                Pilih Bagian
-              </p>
-
-              <p className="text-[11px] text-gray-400 mt-1">
-                Pilih materi kanji yang ingin dipelajari
-              </p>
-
-            </div>
-
-            <div className="max-h-[330px] overflow-y-auto px-1 pb-1">
-
-              {Object.keys(
-                kanjiData
-              ).map(
-                (p, index) => {
-
-                  const cards =
-                    allParts[p] || []
-
-                  const learned =
-                    mastered.filter(
-                      (m) =>
-                        m.startsWith(
-                          `${p}-`
-                        )
-                    ).length
-
-                  const percentage =
-                    cards.length > 0
-                      ? Math.round(
-                          (learned /
-                            cards.length) *
-                            100
-                        )
-                      : 0
-
-                  const selected =
-                    p === part
-
-                  return (
-                    <button
-                      key={p}
+                    <div
+                      className="fixed inset-0 z-30"
                       onClick={() =>
-                        changePart(p)
+                        setShowParts(false)
                       }
-                      className={`w-full flex items-center gap-3 p-3 rounded-2xl text-left transition-all duration-200 ${
-                        selected
-                          ? 'bg-black text-white'
-                          : 'hover:bg-gray-50 text-gray-900'
-                      }`}
-                    >
+                    />
 
-                      <div
-                        className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0 ${
-                          selected
-                            ? 'bg-white/15 text-white'
-                            : 'bg-gray-100 text-gray-700'
-                        }`}
-                      >
-                        {index + 1}
-                      </div>
+                    <div className="absolute z-40 top-full left-0 mt-3 w-[280px] sm:w-[310px] bg-white rounded-3xl border border-gray-100 shadow-2xl shadow-black/10 p-2 animate-[dropdownIn_.22s_ease-out]">
 
-                      <div className="flex-1 min-w-0">
+                      <div className="px-4 pt-3 pb-2">
 
-                        <div className="flex items-center justify-between">
-
-                          <p className="font-bold text-sm">
-                            Bagian {index + 1}
-                          </p>
-
-                          {percentage === 100 && (
-                            <span
-                              className={
-                                selected
-                                  ? 'text-green-300'
-                                  : 'text-green-500'
-                              }
-                            >
-                              ✓
-                            </span>
-                          )}
-
-                        </div>
-
-                        <p
-                          className={`text-[10px] mt-1 ${
-                            selected
-                              ? 'text-white/50'
-                              : 'text-gray-400'
-                          }`}
-                        >
-                          {learned} / {cards.length} hafal
+                        <p className="text-xs font-bold text-gray-900">
+                          Pilih Bagian
                         </p>
 
-                        <div
-                          className={`h-1 rounded-full mt-2 overflow-hidden ${
-                            selected
-                              ? 'bg-white/10'
-                              : 'bg-gray-100'
-                          }`}
-                        >
-
-                          <div
-                            className={`h-full rounded-full transition-all duration-500 ${
-                              selected
-                                ? 'bg-white'
-                                : 'bg-black'
-                            }`}
-                            style={{
-                              width: `${percentage}%`,
-                            }}
-                          />
-
-                        </div>
+                        <p className="text-[11px] text-gray-400 mt-1">
+                          Pilih materi kanji yang ingin dipelajari
+                        </p>
 
                       </div>
 
-                      <span
-                        className={`text-sm ${
-                          selected
-                            ? 'text-white/50'
-                            : 'text-gray-300'
-                        }`}
-                      >
-                        ›
-                      </span>
+                      <div className="max-h-[330px] overflow-y-auto px-1 pb-1">
 
-                    </button>
-                  )
-                }
-              )}
+                        {Object.keys(
+                          kanjiData
+                        ).map(
+                          (p, index) => {
+
+                            const cards =
+                              allParts[p] || []
+
+                            const learned =
+                              mastered.filter(
+                                (m) =>
+                                  m.startsWith(
+                                    `${p}-`
+                                  )
+                              ).length
+
+                            const percentage =
+                              cards.length > 0
+                                ? Math.round(
+                                    (learned /
+                                      cards.length) *
+                                      100
+                                  )
+                                : 0
+
+                            const selected =
+                              p === part
+
+                            return (
+                              <button
+                                key={p}
+                                onClick={() =>
+                                  changePart(p)
+                                }
+                                className={`w-full flex items-center gap-3 p-3 rounded-2xl text-left transition-all duration-200 ${
+                                  selected
+                                    ? 'bg-black text-white'
+                                    : 'hover:bg-gray-50 text-gray-900'
+                                }`}
+                              >
+
+                                <div
+                                  className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0 ${
+                                    selected
+                                      ? 'bg-white/15 text-white'
+                                      : 'bg-gray-100 text-gray-700'
+                                  }`}
+                                >
+                                  {index + 1}
+                                </div>
+
+                                <div className="flex-1 min-w-0">
+
+                                  <div className="flex items-center justify-between">
+
+                                    <p className="font-bold text-sm">
+                                      Bagian {index + 1}
+                                    </p>
+
+                                    {percentage ===
+                                      100 && (
+                                      <span
+                                        className={
+                                          selected
+                                            ? 'text-green-300'
+                                            : 'text-green-500'
+                                        }
+                                      >
+                                        ✓
+                                      </span>
+                                    )}
+
+                                  </div>
+
+                                  <p
+                                    className={`text-[10px] mt-1 ${
+                                      selected
+                                        ? 'text-white/50'
+                                        : 'text-gray-400'
+                                    }`}
+                                  >
+                                    {learned} / {cards.length} hafal
+                                  </p>
+
+                                  <div
+                                    className={`h-1 rounded-full mt-2 overflow-hidden ${
+                                      selected
+                                        ? 'bg-white/10'
+                                        : 'bg-gray-100'
+                                    }`}
+                                  >
+
+                                    <div
+                                      className={`h-full rounded-full transition-all duration-500 ${
+                                        selected
+                                          ? 'bg-white'
+                                          : 'bg-black'
+                                      }`}
+                                      style={{
+                                        width: `${percentage}%`,
+                                      }}
+                                    />
+
+                                  </div>
+
+                                </div>
+
+                                <span
+                                  className={`text-sm ${
+                                    selected
+                                      ? 'text-white/50'
+                                      : 'text-gray-300'
+                                  }`}
+                                >
+                                  ›
+                                </span>
+
+                              </button>
+                            )
+                          }
+                        )}
+
+                      </div>
+
+                    </div>
+
+                  </>
+                )}
+
+              </div>
+
+              {/* ========================================================
+                  KOLEKSI
+              ========================================================= */}
+
+              <button
+                onClick={() => {
+                  setUnlearnedOnly(false)
+                  setShowCollection(true)
+                }}
+                className="bg-white border border-gray-200 rounded-2xl w-[54px] h-[54px] flex-shrink-0 flex flex-col items-center justify-center shadow-sm hover:shadow-md hover:border-gray-300 active:scale-95 transition-all"
+                aria-label="Koleksi"
+              >
+
+                <span className="text-lg leading-none">
+                  📚
+                </span>
+
+                <span className="text-[9px] font-semibold text-gray-500 mt-1">
+                  Koleksi
+                </span>
+
+              </button>
+
+              {/* ========================================================
+                  BELUM
+              ========================================================= */}
+
+              <button
+                onClick={startUnlearnedMode}
+                className="bg-white border border-gray-200 rounded-2xl w-[54px] h-[54px] flex-shrink-0 flex flex-col items-center justify-center shadow-sm hover:shadow-md hover:border-gray-300 active:scale-95 transition-all"
+                aria-label="Belum Hafal"
+              >
+
+                <span className="text-lg leading-none">
+                  🔄
+                </span>
+
+                <span className="text-[9px] font-semibold text-gray-500 mt-1">
+                  Belum
+                </span>
+
+              </button>
+
+              {/* ========================================================
+                  KELUAR
+              ========================================================= */}
+
+              <button
+                onClick={logout}
+                className="bg-white border border-gray-200 rounded-2xl w-[54px] h-[54px] flex-shrink-0 flex flex-col items-center justify-center shadow-sm hover:shadow-md hover:border-gray-300 active:scale-95 transition-all"
+                aria-label="Keluar"
+              >
+
+                <span className="text-lg leading-none">
+                  ↪
+                </span>
+
+                <span className="text-[9px] font-semibold text-gray-500 mt-1">
+                  Keluar
+                </span>
+
+              </button>
 
             </div>
 
-          </div>
+          </header>
 
-        </>
-      )}
-
-    </div>
-
-    {/* ========================================================
-        KOLEKSI
-    ========================================================= */}
-
-    <button
-      onClick={() => {
-        setUnlearnedOnly(false)
-        setShowCollection(true)
-      }}
-      className="bg-white border border-gray-200 rounded-2xl w-[54px] h-[54px] flex-shrink-0 flex flex-col items-center justify-center shadow-sm hover:shadow-md hover:border-gray-300 active:scale-95 transition-all"
-      aria-label="Koleksi"
-    >
-
-      <span className="text-lg leading-none">
-        📚
-      </span>
-
-      <span className="text-[9px] font-semibold text-gray-500 mt-1">
-        Koleksi
-      </span>
-
-    </button>
-
-    {/* ========================================================
-        BELUM HAFAL
-    ========================================================= */}
-
-    <button
-      onClick={startUnlearnedMode}
-      className="bg-white border border-gray-200 rounded-2xl w-[54px] h-[54px] flex-shrink-0 flex flex-col items-center justify-center shadow-sm hover:shadow-md hover:border-gray-300 active:scale-95 transition-all"
-      aria-label="Belum Hafal"
-    >
-
-      <span className="text-lg leading-none">
-        🔄
-      </span>
-
-      <span className="text-[9px] font-semibold text-gray-500 mt-1">
-        Belum
-      </span>
-
-    </button>
-
-    {/* ========================================================
-        KELUAR
-    ========================================================= */}
-
-    <button
-      onClick={logout}
-      className="bg-white border border-gray-200 rounded-2xl w-[54px] h-[54px] flex-shrink-0 flex flex-col items-center justify-center shadow-sm hover:shadow-md hover:border-gray-300 active:scale-95 transition-all"
-      aria-label="Keluar"
-    >
-
-      <span className="text-lg leading-none">
-        ↪
-      </span>
-
-      <span className="text-[9px] font-semibold text-gray-500 mt-1">
-        Keluar
-      </span>
-
-    </button>
-
-  </div>
-
-</header>
-
-          {/* ============================================================
-              PROGRESS
-          ============================================================= */}
+          {/* PROGRESS */}
 
           <section className="bg-white rounded-2xl border border-gray-100 p-4 mb-5 shadow-sm">
 
@@ -896,9 +878,11 @@ export default function Home() {
                         `${part}-`
                       )
                   ).length
-                }{' '}
+                }
 
-                / {allCurrentCards.length}
+                {' / '}
+
+                {allCurrentCards.length}
 
               </span>
 
@@ -1017,7 +1001,7 @@ export default function Home() {
                     </div>
                   )}
 
-                  <div className="text-[clamp(6px,12vw,80px)] leading-none font-medium select-none transition-transform duration-300 hover:scale-105">
+                  <div className="text-[clamp(60px,12vw,80px)] leading-none font-medium select-none transition-transform duration-300 hover:scale-105">
                     {currentKanji.k}
                   </div>
 
@@ -1172,6 +1156,7 @@ export default function Home() {
                 </button>
 
               </>
+
             ) : (
 
               <p className="text-gray-500">
@@ -1216,17 +1201,19 @@ export default function Home() {
             }
           >
 
-            {/* MODAL HEADER */}
+            {/* ==========================================================
+                MODAL HEADER
+            =========================================================== */}
 
-            <div className="px-5 pt-8 pb-5 border-b border-gray-100 flex items-center justify-between">
+            <div className="flex-shrink-0 px-5 pt-10 pb-5 border-b border-gray-100 flex items-center justify-between">
 
-              <div>
+              <div className="min-w-0 pr-3">
 
-                <h2 className="font-bold text-lg">
+                <h2 className="font-bold text-lg leading-tight">
                   Koleksi Hafalan
                 </h2>
 
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-gray-400 mt-1 leading-relaxed">
                   {mastered.length} kanji sudah ditandai
                 </p>
 
@@ -1236,18 +1223,18 @@ export default function Home() {
                 onClick={() =>
                   setShowCollection(false)
                 }
-                className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 active:scale-90 transition"
+                className="w-9 h-9 flex-shrink-0 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 active:scale-90 transition"
               >
                 ✕
               </button>
 
             </div>
 
-            {/* ============================================================
+            {/* ==========================================================
                 COLLECTION CONTENT
-            ============================================================= */}
+            =========================================================== */}
 
-            <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 overscroll-contain">
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 sm:px-5 py-4">
 
               {mastered.length === 0 ? (
 
@@ -1309,20 +1296,24 @@ export default function Home() {
                             false
                           )
                         }}
-                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3 flex items-center gap-4 text-left hover:bg-gray-100 hover:border-gray-200 active:scale-[0.99] transition-all"
+                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-3 sm:px-4 py-3 flex items-center gap-3 sm:gap-4 text-left hover:bg-gray-100 hover:border-gray-200 active:scale-[0.99] transition-all"
                       >
 
-                        {/* KANJI */}
+                        {/* ==================================================
+                            KANJI
+                        ================================================== */}
 
-                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-white border border-gray-100 flex items-center justify-center">
+                        <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-white border border-gray-100 flex items-center justify-center">
 
-                          <span className="text-3xl leading-none">
+                          <span className="text-3xl leading-none whitespace-nowrap">
                             {card.k}
                           </span>
 
                         </div>
 
-                        {/* ARTI */}
+                        {/* ==================================================
+                            INFORMASI
+                        ================================================== */}
 
                         <div className="flex-1 min-w-0">
 
@@ -1330,21 +1321,23 @@ export default function Home() {
                             Arti
                           </p>
 
-                          <p className="text-sm sm:text-base font-semibold text-gray-800 break-words leading-snug">
+                          <p className="text-sm sm:text-base font-semibold text-gray-800 leading-snug whitespace-normal break-normal">
                             {card.m}
                           </p>
 
                           {card.r && (
-                            <p className="text-[11px] text-gray-400 mt-1">
+                            <p className="text-[11px] text-gray-400 mt-1 whitespace-nowrap overflow-hidden text-ellipsis">
                               {card.r}
                             </p>
                           )}
 
                         </div>
 
-                        {/* TANDA HIJAU LEMBUT */}
+                        {/* ==================================================
+                            TANDA HIJAU
+                        ================================================== */}
 
-                        <div className="w-8 h-8 flex-shrink-0 rounded-full bg-green-50 border border-green-100 flex items-center justify-center">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-50 border border-green-100 flex items-center justify-center">
 
                           <span className="text-green-500 text-sm font-bold">
                             ✓
