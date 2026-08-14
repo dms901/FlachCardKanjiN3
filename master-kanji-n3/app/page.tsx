@@ -620,45 +620,45 @@ export default function Home() {
               </p>
 
               <button
-                onClick={() =>
-                  setShowParts(!showParts)
-                }
-                className="group flex items-center gap-3 bg-white border border-gray-200 rounded-2xl px-4 py-2.5 shadow-sm hover:shadow-md hover:border-gray-300 active:scale-[0.98] transition-all"
-              >
+  onClick={() =>
+    setShowParts(!showParts)
+  }
+  className="group flex items-center gap-3 bg-white border border-gray-200 rounded-2xl px-4 py-2.5 shadow-sm hover:shadow-md hover:border-gray-300 active:scale-[0.98] transition-all"
+>
 
-                <div className="w-9 h-9 rounded-xl bg-black text-white flex items-center justify-center text-sm font-bold">
-                  {part.replace(
-                    'part',
-                    ''
-                  )}
-                </div>
+  <div className="w-9 h-9 rounded-xl bg-black text-white flex items-center justify-center text-sm font-bold">
+    {part.replace(
+      'part',
+      ''
+    )}
+  </div>
 
-                <div className="text-left">
+  <div className="flex items-center gap-2">
 
-                  <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
-                    Bagian
-                  </p>
+    <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
+      Bagian
+    </p>
 
-                  <p className="text-base font-bold leading-tight">
-                    {part.replace(
-                      'part',
-                      ''
-                    )}
-                  </p>
+    <p className="text-base font-bold leading-tight">
+      {part.replace(
+        'part',
+        ''
+      )}
+    </p>
 
-                </div>
+  </div>
 
-                <span
-                  className={`ml-2 text-gray-400 transition-transform duration-300 ${
-                    showParts
-                      ? 'rotate-180'
-                      : ''
-                  }`}
-                >
-                  ↓
-                </span>
+  <span
+    className={`ml-2 text-gray-400 transition-transform duration-300 ${
+      showParts
+        ? 'rotate-180'
+        : ''
+    }`}
+  >
+    ↓
+  </span>
 
-              </button>
+</button>
 
               {/* DROPDOWN */}
 
