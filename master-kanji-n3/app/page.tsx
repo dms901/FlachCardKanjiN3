@@ -1255,7 +1255,7 @@ export default function Home() {
                 COLLECTION CONTENT
             =========================================================== */}
 
-            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 sm:px-5 py-4">
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 sm:px-5 py-7">
 
               {mastered.length === 0 ? (
 
