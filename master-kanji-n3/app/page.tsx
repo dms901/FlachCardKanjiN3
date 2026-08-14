@@ -2103,9 +2103,16 @@ export default function Home() {
 
                   <div className="absolute top-6 left-6">
 
-                   <span className="text-[clamp(5px,2.5vw,10px)] font-bold tracking-widest text-gray-300">
-                     {cardIndex + 1} / {currentCards.length}
-                   </span>
+                    <span className="text-[10px] font-bold tracking-widest text-gray-300">
+
+                      {cardIndex +
+                        1}{' '}
+                      /{' '}
+                      {
+                        currentCards.length
+                      }
+
+                    </span>
 
                   </div>
 
@@ -2115,7 +2122,7 @@ export default function Home() {
                     </div>
                   )}
 
-                  <div className="text-[clamp(60px,12vw,80px)] leading-none font-medium select-none transition-transform duration-300 hover:scale-105">
+                  <div className="text-[clamp(30px,10vw,80px)] leading-none font-medium select-none transition-transform duration-300 hover:scale-105">
                     {
                       currentKanji.k
                     }
