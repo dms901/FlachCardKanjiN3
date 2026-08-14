@@ -1,4 +1,4 @@
- 'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@supabase/supabase-js'
@@ -25,6 +25,7 @@ export default function Home() {
 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+
   const [showCollection, setShowCollection] = useState(false)
 
   // MODE HANYA KANJI YANG BELUM HAFAL
@@ -46,7 +47,6 @@ export default function Home() {
 
   const allCurrentCards = allParts[part] || []
 
-  // Simpan index asli supaya data Supabase tidak tertukar
   const currentCards = allCurrentCards
     .map((card, index) => ({
       card,
@@ -67,9 +67,11 @@ export default function Home() {
   const currentOriginalIndex =
     currentItem?.originalIndex ?? 0
 
-  const currentId = `${part}-${currentOriginalIndex}`
+  const currentId =
+    `${part}-${currentOriginalIndex}`
 
-  const isMastered = mastered.includes(currentId)
+  const isMastered =
+    mastered.includes(currentId)
 
   /*
   |--------------------------------------------------------------------------
@@ -283,7 +285,7 @@ export default function Home() {
 
   /*
   |--------------------------------------------------------------------------
-  | CHANGE PART + ANIMATION
+  | CHANGE PART
   |--------------------------------------------------------------------------
   */
 
@@ -301,7 +303,6 @@ export default function Home() {
       setCardIndex(0)
       setIsFlipped(false)
 
-      // Saat pindah bagian kembali ke mode normal
       setUnlearnedOnly(false)
 
       setTimeout(() => {
@@ -325,11 +326,8 @@ export default function Home() {
     setSaving(true)
 
     try {
-      /*
-      |--------------------------------------------------------------------------
-      | HAPUS DARI MASTERED
-      |--------------------------------------------------------------------------
-      */
+
+      // HAPUS DARI MASTERED
 
       if (mastered.includes(id)) {
         const { error } = await supabase
@@ -353,11 +351,7 @@ export default function Home() {
         return
       }
 
-      /*
-      |--------------------------------------------------------------------------
-      | TAMBAHKAN KE MASTERED
-      |--------------------------------------------------------------------------
-      */
+      // TAMBAHKAN KE MASTERED
 
       const { error } = await supabase
         .from('kanji_progress')
@@ -376,11 +370,7 @@ export default function Home() {
 
       setMastered(updatedMastered)
 
-      /*
-      |--------------------------------------------------------------------------
-      | JIKA SEDANG MODE BELUM HAFAL
-      |--------------------------------------------------------------------------
-      */
+      // JIKA MODE BELUM HAFAL
 
       if (unlearnedOnly) {
         const remainingCards =
@@ -401,9 +391,6 @@ export default function Home() {
         if (remainingCards.length === 0) {
           setCardIndex(0)
         } else {
-          // Kalau kartu sekarang index 2,
-          // kartu berikutnya akan otomatis menempati index 2.
-          // Kalau kartu terakhir, mundur ke kartu sebelumnya.
           setCardIndex((prev) =>
             Math.min(
               prev,
@@ -412,6 +399,7 @@ export default function Home() {
           )
         }
       }
+
     } catch (error: any) {
       alert(
         error.message ||
@@ -461,6 +449,7 @@ export default function Home() {
   if (loading) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-[#f7f8fc]">
+
         <div className="text-center animate-pulse">
 
           <div className="w-10 h-10 border-4 border-gray-200 border-t-black rounded-full animate-spin mx-auto mb-4" />
@@ -470,6 +459,7 @@ export default function Home() {
           </p>
 
         </div>
+
       </main>
     )
   }
@@ -603,256 +593,312 @@ export default function Home() {
 
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-5 sm:py-8">
 
-        {/* HEADER + PROGRESS STICKY */}
+        {/* ================================================================
+            HEADER + MENU ATAS
+        ================================================================= */}
 
         <div className="sticky top-0 z-30 bg-[#f7f8fc] pt-1 pb-2">
 
-          {/* HEADER */}
+          <header className="mb-4">
 
-          <header className="flex items-center justify-between mb-6">
+            <div className="flex items-end justify-between gap-2">
 
-            {/* CUSTOM PART MENU */}
+              {/* ========================================================
+                  MENU BAGIAN
+              ========================================================= */}
 
-            <div className="relative">
+              <div className="relative min-w-0">
 
-              <p className="text-[10px] tracking-[0.2em] font-bold text-gray-400 mb-2">
-                MASTER KANJI
-              </p>
+                <p className="text-[10px] tracking-[0.2em] font-bold text-gray-400 mb-2">
+                  MASTER KANJI
+                </p>
 
-              <button
-  onClick={() =>
-    setShowParts(!showParts)
-  }
-  className="group flex items-center gap-3 bg-white border border-gray-200 rounded-2xl px-4 py-2.5 shadow-sm hover:shadow-md hover:border-gray-300 active:scale-[0.98] transition-all"
->
+                <button
+                  onClick={() =>
+                    setShowParts(!showParts)
+                  }
+                  className="group flex items-center gap-2.5 bg-white border border-gray-200 rounded-2xl px-3 py-2.5 shadow-sm hover:shadow-md hover:border-gray-300 active:scale-[0.98] transition-all"
+                >
 
-  <div className="w-9 h-9 rounded-xl bg-black text-white flex items-center justify-center text-sm font-bold">
-    {part.replace(
-      'part',
-      ''
-    )}
-  </div>
+                  {/* NOMOR BAGIAN */}
 
-  <div className="flex items-center gap-2">
+                  <div className="w-9 h-9 rounded-xl bg-black text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
+                    {part.replace(
+                      'part',
+                      ''
+                    )}
+                  </div>
 
-    <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
-      Bagian
-    </p>
+                  {/* BAGIAN + ANGKA SEJAJAR */}
 
-    <p className="text-base font-bold leading-tight">
-      {part.replace(
-        'part',
-        ''
-      )}
-    </p>
+                  <div className="flex items-center gap-2">
 
-  </div>
+                    <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
+                      Bagian
+                    </p>
 
-  <span
-    className={`ml-2 text-gray-400 transition-transform duration-300 ${
-      showParts
-        ? 'rotate-180'
-        : ''
-    }`}
-  >
-    ↓
-  </span>
+                    <p className="text-base font-bold leading-none">
+                      {part.replace(
+                        'part',
+                        ''
+                      )}
+                    </p>
 
-</button>
+                  </div>
 
-              {/* DROPDOWN */}
+                  <span
+                    className={`text-gray-400 transition-transform duration-300 ${
+                      showParts
+                        ? 'rotate-180'
+                        : ''
+                    }`}
+                  >
+                    ↓
+                  </span>
 
-              {showParts && (
-                <>
+                </button>
 
-                  <div
-                    className="fixed inset-0 z-30"
-                    onClick={() =>
-                      setShowParts(false)
-                    }
-                  />
+                {/* ======================================================
+                    DROPDOWN BAGIAN
+                ======================================================= */}
 
-                  <div className="absolute z-40 top-full left-0 mt-3 w-[280px] sm:w-[310px] bg-white rounded-3xl border border-gray-100 shadow-2xl shadow-black/10 p-2 animate-[dropdownIn_.22s_ease-out]">
+                {showParts && (
+                  <>
 
-                    <div className="px-4 pt-3 pb-2">
+                    <div
+                      className="fixed inset-0 z-30"
+                      onClick={() =>
+                        setShowParts(false)
+                      }
+                    />
 
-                      <p className="text-xs font-bold text-gray-900">
-                        Pilih Bagian
-                      </p>
+                    <div className="absolute z-40 top-full left-0 mt-3 w-[280px] sm:w-[310px] bg-white rounded-3xl border border-gray-100 shadow-2xl shadow-black/10 p-2 animate-[dropdownIn_.22s_ease-out]">
 
-                      <p className="text-[11px] text-gray-400 mt-1">
-                        Pilih materi kanji yang ingin dipelajari
-                      </p>
+                      <div className="px-4 pt-3 pb-2">
 
-                    </div>
+                        <p className="text-xs font-bold text-gray-900">
+                          Pilih Bagian
+                        </p>
 
-                    <div className="max-h-[330px] overflow-y-auto px-1 pb-1">
+                        <p className="text-[11px] text-gray-400 mt-1">
+                          Pilih materi kanji yang ingin dipelajari
+                        </p>
 
-                      {Object.keys(
-                        kanjiData
-                      ).map(
-                        (p, index) => {
+                      </div>
 
-                          const cards =
-                            allParts[p] ||
-                            []
+                      <div className="max-h-[330px] overflow-y-auto px-1 pb-1">
 
-                          const learned =
-                            mastered.filter(
-                              (m) =>
-                                m.startsWith(
-                                  `${p}-`
-                                )
-                            ).length
+                        {Object.keys(
+                          kanjiData
+                        ).map(
+                          (p, index) => {
 
-                          const percentage =
-                            cards.length > 0
-                              ? Math.round(
-                                  (learned /
-                                    cards.length) *
-                                    100
-                                )
-                              : 0
+                            const cards =
+                              allParts[p] ||
+                              []
 
-                          const selected =
-                            p === part
+                            const learned =
+                              mastered.filter(
+                                (m) =>
+                                  m.startsWith(
+                                    `${p}-`
+                                  )
+                              ).length
 
-                          return (
-                            <button
-                              key={p}
-                              onClick={() =>
-                                changePart(
-                                  p
-                                )
-                              }
-                              className={`w-full flex items-center gap-3 p-3 rounded-2xl text-left transition-all duration-200 ${
-                                selected
-                                  ? 'bg-black text-white'
-                                  : 'hover:bg-gray-50 text-gray-900'
-                              }`}
-                            >
+                            const percentage =
+                              cards.length > 0
+                                ? Math.round(
+                                    (learned /
+                                      cards.length) *
+                                      100
+                                  )
+                                : 0
 
-                              {/* NUMBER */}
+                            const selected =
+                              p === part
 
-                              <div
-                                className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0 ${
+                            return (
+                              <button
+                                key={p}
+                                onClick={() =>
+                                  changePart(
+                                    p
+                                  )
+                                }
+                                className={`w-full flex items-center gap-3 p-3 rounded-2xl text-left transition-all duration-200 ${
                                   selected
-                                    ? 'bg-white/15 text-white'
-                                    : 'bg-gray-100 text-gray-700'
+                                    ? 'bg-black text-white'
+                                    : 'hover:bg-gray-50 text-gray-900'
                                 }`}
                               >
-                                {index + 1}
-                              </div>
 
-                              {/* INFO */}
+                                {/* NUMBER */}
 
-                              <div className="flex-1 min-w-0">
-
-                                <div className="flex items-center justify-between">
-
-                                  <p className="font-bold text-sm">
-                                    Bagian{' '}
-                                    {index +
-                                      1}
-                                  </p>
-
-                                  {percentage ===
-                                    100 && (
-                                    <span
-                                      className={
-                                        selected
-                                          ? 'text-green-300'
-                                          : 'text-green-500'
-                                      }
-                                    >
-                                      ✓
-                                    </span>
-                                  )}
-
+                                <div
+                                  className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0 ${
+                                    selected
+                                      ? 'bg-white/15 text-white'
+                                      : 'bg-gray-100 text-gray-700'
+                                  }`}
+                                >
+                                  {index + 1}
                                 </div>
 
-                                <div className="flex items-center gap-2 mt-1">
+                                {/* INFO */}
+
+                                <div className="flex-1 min-w-0">
+
+                                  <div className="flex items-center justify-between">
+
+                                    <p className="font-bold text-sm">
+                                      Bagian{' '}
+                                      {index +
+                                        1}
+                                    </p>
+
+                                    {percentage ===
+                                      100 && (
+                                      <span
+                                        className={
+                                          selected
+                                            ? 'text-green-300'
+                                            : 'text-green-500'
+                                        }
+                                      >
+                                        ✓
+                                      </span>
+                                    )}
+
+                                  </div>
 
                                   <p
-                                    className={`text-[10px] ${
+                                    className={`text-[10px] mt-1 ${
                                       selected
                                         ? 'text-white/50'
                                         : 'text-gray-400'
                                     }`}
                                   >
-                                    {learned}{' '}
-                                    /{' '}
+                                    {learned} /{' '}
                                     {
                                       cards.length
                                     }{' '}
                                     hafal
                                   </p>
 
+                                  <div
+                                    className={`h-1 rounded-full mt-2 overflow-hidden ${
+                                      selected
+                                        ? 'bg-white/10'
+                                        : 'bg-gray-100'
+                                    }`}
+                                  >
+
+                                    <div
+                                      className={`h-full rounded-full transition-all duration-500 ${
+                                        selected
+                                          ? 'bg-white'
+                                          : 'bg-black'
+                                      }`}
+                                      style={{
+                                        width: `${percentage}%`,
+                                      }}
+                                    />
+
+                                  </div>
+
                                 </div>
 
-                                {/* MINI PROGRESS */}
-
-                                <div
-                                  className={`h-1 rounded-full mt-2 overflow-hidden ${
+                                <span
+                                  className={`text-sm ${
                                     selected
-                                      ? 'bg-white/10'
-                                      : 'bg-gray-100'
+                                      ? 'text-white/50'
+                                      : 'text-gray-300'
                                   }`}
                                 >
+                                  ›
+                                </span>
 
-                                  <div
-                                    className={`h-full rounded-full transition-all duration-500 ${
-                                      selected
-                                        ? 'bg-white'
-                                        : 'bg-black'
-                                    }`}
-                                    style={{
-                                      width: `${percentage}%`,
-                                    }}
-                                  />
+                              </button>
+                            )
+                          }
+                        )}
 
-                                </div>
-
-                              </div>
-
-                              {/* ARROW */}
-
-                              <span
-                                className={`text-sm ${
-                                  selected
-                                    ? 'text-white/50'
-                                    : 'text-gray-300'
-                                }`}
-                              >
-                                ›
-                              </span>
-
-                            </button>
-                          )
-                        }
-                      )}
+                      </div>
 
                     </div>
 
-                  </div>
+                  </>
+                )}
 
-                </>
-              )}
+              </div>
+
+              {/* ========================================================
+                  MENU KOLEKSI + BELUM HAFAL
+              ========================================================= */}
+
+              <div className="flex items-center gap-2 flex-shrink-0">
+
+                {/* KOLEKSI */}
+
+                <button
+                  onClick={() => {
+                    setUnlearnedOnly(false)
+                    setShowCollection(true)
+                  }}
+                  className="group bg-white border border-gray-200 rounded-2xl w-[54px] h-[54px] flex flex-col items-center justify-center shadow-sm hover:shadow-md hover:border-gray-300 active:scale-95 transition-all"
+                  aria-label="Koleksi"
+                >
+
+                  <span className="text-lg leading-none">
+                    📚
+                  </span>
+
+                  <span className="text-[9px] font-semibold text-gray-500 mt-1">
+                    Koleksi
+                  </span>
+
+                </button>
+
+                {/* BELUM HAFAL */}
+
+                <button
+                  onClick={startUnlearnedMode}
+                  className="group bg-white border border-gray-200 rounded-2xl w-[54px] h-[54px] flex flex-col items-center justify-center shadow-sm hover:shadow-md hover:border-gray-300 active:scale-95 transition-all"
+                  aria-label="Belum Hafal"
+                >
+
+                  <span className="text-lg leading-none">
+                    🔄
+                  </span>
+
+                  <span className="text-[9px] font-semibold text-gray-500 mt-1">
+                    Belum
+                  </span>
+
+                </button>
+
+              </div>
 
             </div>
 
             {/* LOGOUT */}
 
-            <button
-              onClick={logout}
-              className="px-4 py-2 rounded-full bg-white border border-gray-200 text-xs font-semibold text-gray-600 hover:text-black hover:border-gray-300 active:scale-95 transition"
-            >
-              Keluar
-            </button>
+            <div className="flex justify-end mt-2">
+
+              <button
+                onClick={logout}
+                className="px-3 py-1.5 rounded-full bg-white border border-gray-200 text-[10px] font-semibold text-gray-500 hover:text-black hover:border-gray-300 active:scale-95 transition"
+              >
+                Keluar
+              </button>
+
+            </div>
 
           </header>
 
-          {/* PROGRESS */}
+          {/* ============================================================
+              PROGRESS
+          ============================================================= */}
 
           <section className="bg-white rounded-2xl border border-gray-100 p-4 mb-5 shadow-sm">
 
@@ -894,7 +940,9 @@ export default function Home() {
 
         </div>
 
-        {/* MODE INDICATOR */}
+        {/* ================================================================
+            MODE BELUM HAFAL
+        ================================================================= */}
 
         {unlearnedOnly && (
           <div className="mb-4 flex items-center justify-between bg-black text-white rounded-2xl px-4 py-3">
@@ -925,7 +973,9 @@ export default function Home() {
           </div>
         )}
 
-        {/* CARD */}
+        {/* ================================================================
+            CARD
+        ================================================================= */}
 
         {currentKanji ? (
 
@@ -975,8 +1025,7 @@ export default function Home() {
 
                     <span className="text-[10px] font-bold tracking-widest text-gray-300">
 
-                      {cardIndex + 1}{' '}
-                      /{' '}
+                      {cardIndex + 1} /{' '}
                       {currentCards.length}
 
                     </span>
@@ -1119,6 +1168,7 @@ export default function Home() {
 
             {unlearnedOnly ? (
               <>
+
                 <div className="text-4xl mb-4">
                   🎉
                 </div>
@@ -1141,93 +1191,19 @@ export default function Home() {
                 >
                   Tampilkan Semua
                 </button>
+
               </>
             ) : (
+
               <p className="text-gray-500">
                 Belum ada data kanji pada bagian ini.
               </p>
+
             )}
 
           </div>
 
         )}
-
-               {/* BOTTOM MENU */}
-
-        <div className="grid grid-cols-2 gap-3 mt-6">
-
-          {/* KOLEKSI */}
-
-          <button
-            onClick={() => {
-              setUnlearnedOnly(false)
-              setShowCollection(true)
-            }}
-            className="bg-white border border-gray-200 rounded-2xl px-3.5 py-3.5 text-left hover:border-gray-300 hover:-translate-y-0.5 active:scale-[0.98] transition-all flex items-center gap-3"
-          >
-
-            {/* ICON */}
-
-            <div className="text-xl flex-shrink-0">
-              📚
-            </div>
-
-            {/* TEXT */}
-
-            <div className="min-w-0">
-
-              <p className="font-bold text-sm leading-tight">
-                Koleksi
-              </p>
-
-              <p className="text-[11px] text-gray-400 mt-1 leading-tight">
-                {mastered.length} kanji sudah hafal
-              </p>
-
-            </div>
-
-          </button>
-
-
-          {/* BELUM HAFAL */}
-
-          <button
-            onClick={startUnlearnedMode}
-            className="bg-white border border-gray-200 rounded-2xl px-3.5 py-3.5 text-left hover:border-gray-300 hover:-translate-y-0.5 active:scale-[0.98] transition-all flex items-center gap-3"
-          >
-
-            {/* ICON */}
-
-            <div className="text-xl flex-shrink-0">
-              🔄
-            </div>
-
-            {/* TEXT */}
-
-            <div className="min-w-0">
-
-              <p className="font-bold text-sm leading-tight">
-                Belum Hafal
-              </p>
-
-              <p className="text-[11px] text-gray-400 mt-1 leading-tight">
-
-                {
-                  allCurrentCards.filter(
-                    (_, index) =>
-                      !mastered.includes(
-                        `${part}-${index}`
-                      )
-                  ).length
-                } kartu belum hafal
-
-              </p>
-
-            </div>
-
-          </button>
-
-        </div>
 
         {/* FOOTER */}
 
@@ -1241,7 +1217,9 @@ export default function Home() {
 
       </div>
 
-      {/* COLLECTION MODAL */}
+      {/* ================================================================
+          COLLECTION MODAL
+      ================================================================= */}
 
       {showCollection && (
 
@@ -1286,9 +1264,11 @@ export default function Home() {
 
             </div>
 
-            {/* COLLECTION CONTENT */}
+            {/* ============================================================
+                COLLECTION CONTENT
+            ============================================================= */}
 
-            <div className="flex-1 min-h-0 overflow-y-auto p-5 overscroll-contain">
+            <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 overscroll-contain">
 
               {mastered.length === 0 ? (
 
@@ -1310,7 +1290,7 @@ export default function Home() {
 
               ) : (
 
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                <div className="space-y-2">
 
                   {mastered.map((id) => {
 
@@ -1350,16 +1330,48 @@ export default function Home() {
                             false
                           )
                         }}
-                        className="aspect-square bg-gray-50 border border-gray-100 rounded-2xl flex flex-col items-center justify-center hover:bg-gray-100 hover:scale-[1.02] active:scale-95 transition-all"
+                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3 flex items-center gap-4 text-left hover:bg-gray-100 hover:border-gray-200 active:scale-[0.99] transition-all"
                       >
 
-                        <span className="text-4xl">
-                          {card.k}
-                        </span>
+                        {/* KANJI */}
 
-                        <span className="text-[10px] text-gray-400 mt-2">
-                          {card.m}
-                        </span>
+                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-white border border-gray-100 flex items-center justify-center">
+
+                          <span className="text-3xl leading-none">
+                            {card.k}
+                          </span>
+
+                        </div>
+
+                        {/* ARTI */}
+
+                        <div className="flex-1 min-w-0">
+
+                          <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">
+                            Arti
+                          </p>
+
+                          <p className="text-sm sm:text-base font-semibold text-gray-800 break-words leading-snug">
+                            {card.m}
+                          </p>
+
+                          {card.r && (
+                            <p className="text-[11px] text-gray-400 mt-1">
+                              {card.r}
+                            </p>
+                          )}
+
+                        </div>
+
+                        {/* TANDA HIJAU LEMBUT */}
+
+                        <div className="w-8 h-8 flex-shrink-0 rounded-full bg-green-50 border border-green-100 flex items-center justify-center">
+
+                          <span className="text-green-500 text-sm font-bold">
+                            ✓
+                          </span>
+
+                        </div>
 
                       </button>
 
@@ -1378,7 +1390,9 @@ export default function Home() {
 
       )}
 
-      {/* ANIMATION STYLE */}
+      {/* ================================================================
+          ANIMATION STYLE
+      ================================================================= */}
 
       <style jsx global>{`
 
