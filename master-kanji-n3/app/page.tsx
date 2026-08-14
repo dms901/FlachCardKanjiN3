@@ -27,6 +27,9 @@ export default function Home() {
   const [saving, setSaving] = useState(false)
   const [showCollection, setShowCollection] = useState(false)
 
+  // MODE HANYA KANJI YANG BELUM HAFAL
+  const [unlearnedOnly, setUnlearnedOnly] = useState(false)
+
   // MENU BAGIAN
   const [showParts, setShowParts] = useState(false)
 
@@ -34,20 +37,52 @@ export default function Home() {
   const [changingPart, setChangingPart] = useState(false)
 
   const allParts = kanjiData as Record<string, any[]>
-  const currentCards = allParts[part] || []
 
-  const currentKanji = currentCards[cardIndex]
+  /*
+  |--------------------------------------------------------------------------
+  | CURRENT CARDS
+  |--------------------------------------------------------------------------
+  */
 
-  const currentId = `${part}-${cardIndex}`
+  const allCurrentCards = allParts[part] || []
+
+  // Simpan index asli supaya data Supabase tidak tertukar
+  const currentCards = allCurrentCards
+    .map((card, index) => ({
+      card,
+      originalIndex: index,
+    }))
+    .filter(({ originalIndex }) => {
+      if (!unlearnedOnly) return true
+
+      return !mastered.includes(
+        `${part}-${originalIndex}`
+      )
+    })
+
+  const currentItem = currentCards[cardIndex]
+
+  const currentKanji = currentItem?.card
+
+  const currentOriginalIndex =
+    currentItem?.originalIndex ?? 0
+
+  const currentId = `${part}-${currentOriginalIndex}`
 
   const isMastered = mastered.includes(currentId)
 
+  /*
+  |--------------------------------------------------------------------------
+  | PROGRESS
+  |--------------------------------------------------------------------------
+  */
+
   const progress =
-    currentCards.length > 0
+    allCurrentCards.length > 0
       ? (mastered.filter((m) =>
           m.startsWith(`${part}-`)
         ).length /
-          currentCards.length) *
+          allCurrentCards.length) *
         100
       : 0
 
@@ -76,15 +111,17 @@ export default function Home() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setUser(session?.user ?? null)
+    } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        setUser(session?.user ?? null)
 
-      if (session?.user) {
-        await loadMastered(session.user.id)
-      } else {
-        setMastered([])
+        if (session?.user) {
+          await loadMastered(session.user.id)
+        } else {
+          setMastered([])
+        }
       }
-    })
+    )
 
     return () => {
       subscription.unsubscribe()
@@ -110,7 +147,10 @@ export default function Home() {
       }
 
       const ids =
-        data?.map((item) => `${item.part}-${item.card_index}`) || []
+        data?.map(
+          (item) =>
+            `${item.part}-${item.card_index}`
+        ) || []
 
       setMastered(ids)
     } catch (error) {
@@ -124,7 +164,9 @@ export default function Home() {
   |--------------------------------------------------------------------------
   */
 
-  const handleAuth = async (e: React.FormEvent) => {
+  const handleAuth = async (
+    e: React.FormEvent
+  ) => {
     e.preventDefault()
 
     if (!email || !password) {
@@ -136,10 +178,11 @@ export default function Home() {
 
     try {
       if (authMode === 'register') {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-        })
+        const { data, error } =
+          await supabase.auth.signUp({
+            email,
+            password,
+          })
 
         if (error) throw error
 
@@ -151,15 +194,19 @@ export default function Home() {
           alert('Akun berhasil dibuat!')
         }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        })
+        const { error } =
+          await supabase.auth.signInWithPassword({
+            email,
+            password,
+          })
 
         if (error) throw error
       }
     } catch (error: any) {
-      alert(error.message || 'Terjadi kesalahan.')
+      alert(
+        error.message ||
+          'Terjadi kesalahan.'
+      )
     } finally {
       setLoading(false)
     }
@@ -178,6 +225,7 @@ export default function Home() {
     setMastered([])
     setCardIndex(0)
     setIsFlipped(false)
+    setUnlearnedOnly(false)
   }
 
   /*
@@ -192,7 +240,10 @@ export default function Home() {
     setIsFlipped(false)
 
     setCardIndex((prev) => {
-      return (prev + 1) % currentCards.length
+      return (
+        (prev + 1) %
+        currentCards.length
+      )
     })
   }
 
@@ -202,7 +253,10 @@ export default function Home() {
     setIsFlipped(false)
 
     setCardIndex((prev) => {
-      return (prev - 1 + currentCards.length) % currentCards.length
+      return (
+        (prev - 1 + currentCards.length) %
+        currentCards.length
+      )
     })
   }
 
@@ -215,8 +269,13 @@ export default function Home() {
       Math.random() * currentCards.length
     )
 
-    if (currentCards.length > 1 && randomIndex === cardIndex) {
-      randomIndex = (randomIndex + 1) % currentCards.length
+    if (
+      currentCards.length > 1 &&
+      randomIndex === cardIndex
+    ) {
+      randomIndex =
+        (randomIndex + 1) %
+        currentCards.length
     }
 
     setCardIndex(randomIndex)
@@ -242,6 +301,9 @@ export default function Home() {
       setCardIndex(0)
       setIsFlipped(false)
 
+      // Saat pindah bagian kembali ke mode normal
+      setUnlearnedOnly(false)
+
       setTimeout(() => {
         setChangingPart(false)
       }, 60)
@@ -257,42 +319,137 @@ export default function Home() {
   const toggleMastered = async () => {
     if (!user || !currentKanji) return
 
-    const id = `${part}-${cardIndex}`
+    const id =
+      `${part}-${currentOriginalIndex}`
 
     setSaving(true)
 
     try {
+      /*
+      |--------------------------------------------------------------------------
+      | HAPUS DARI MASTERED
+      |--------------------------------------------------------------------------
+      */
+
       if (mastered.includes(id)) {
         const { error } = await supabase
           .from('kanji_progress')
           .delete()
           .eq('user_id', user.id)
           .eq('part', part)
-          .eq('card_index', cardIndex)
+          .eq(
+            'card_index',
+            currentOriginalIndex
+          )
 
         if (error) throw error
 
         setMastered((prev) =>
-          prev.filter((item) => item !== id)
+          prev.filter(
+            (item) => item !== id
+          )
         )
-      } else {
-        const { error } = await supabase
-          .from('kanji_progress')
-          .insert({
-            user_id: user.id,
-            part: part,
-            card_index: cardIndex,
-          })
 
-        if (error) throw error
+        return
+      }
 
-        setMastered((prev) => [...prev, id])
+      /*
+      |--------------------------------------------------------------------------
+      | TAMBAHKAN KE MASTERED
+      |--------------------------------------------------------------------------
+      */
+
+      const { error } = await supabase
+        .from('kanji_progress')
+        .insert({
+          user_id: user.id,
+          part: part,
+          card_index: currentOriginalIndex,
+        })
+
+      if (error) throw error
+
+      const updatedMastered = [
+        ...mastered,
+        id,
+      ]
+
+      setMastered(updatedMastered)
+
+      /*
+      |--------------------------------------------------------------------------
+      | JIKA SEDANG MODE BELUM HAFAL
+      |--------------------------------------------------------------------------
+      */
+
+      if (unlearnedOnly) {
+        const remainingCards =
+          allCurrentCards
+            .map((card, index) => ({
+              card,
+              originalIndex: index,
+            }))
+            .filter(
+              ({ originalIndex }) =>
+                !updatedMastered.includes(
+                  `${part}-${originalIndex}`
+                )
+            )
+
+        setIsFlipped(false)
+
+        if (remainingCards.length === 0) {
+          setCardIndex(0)
+        } else {
+          // Kalau kartu sekarang index 2,
+          // kartu berikutnya akan otomatis menempati index 2.
+          // Kalau kartu terakhir, mundur ke kartu sebelumnya.
+          setCardIndex((prev) =>
+            Math.min(
+              prev,
+              remainingCards.length - 1
+            )
+          )
+        }
       }
     } catch (error: any) {
-      alert(error.message || 'Gagal menyimpan progress.')
+      alert(
+        error.message ||
+          'Gagal menyimpan progress.'
+      )
     } finally {
       setSaving(false)
     }
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | START UNLEARNED MODE
+  |--------------------------------------------------------------------------
+  */
+
+  const startUnlearnedMode = () => {
+    const unlearnedCards =
+      allCurrentCards.filter(
+        (_, index) =>
+          !mastered.includes(
+            `${part}-${index}`
+          )
+      )
+
+    if (unlearnedCards.length === 0) {
+      alert(
+        `🎉 Semua kanji Bagian ${part.replace(
+          'part',
+          ''
+        )} sudah hafal!`
+      )
+      return
+    }
+
+    setUnlearnedOnly(true)
+    setCardIndex(0)
+    setIsFlipped(false)
   }
 
   /*
@@ -305,11 +462,13 @@ export default function Home() {
     return (
       <main className="min-h-screen flex items-center justify-center bg-[#f7f8fc]">
         <div className="text-center animate-pulse">
+
           <div className="w-10 h-10 border-4 border-gray-200 border-t-black rounded-full animate-spin mx-auto mb-4" />
 
           <p className="text-sm text-gray-500">
             Memuat Master Kanji...
           </p>
+
         </div>
       </main>
     )
@@ -324,6 +483,7 @@ export default function Home() {
   if (!user) {
     return (
       <main className="min-h-screen bg-[#f7f8fc] flex items-center justify-center px-5 py-10">
+
         <div className="w-full max-w-md">
 
           <div className="bg-white rounded-[28px] shadow-xl shadow-black/5 p-7 sm:p-9 border border-gray-100">
@@ -344,9 +504,13 @@ export default function Home() {
 
             </div>
 
-            <form onSubmit={handleAuth} className="space-y-4">
+            <form
+              onSubmit={handleAuth}
+              className="space-y-4"
+            >
 
               <div>
+
                 <label className="block text-xs font-semibold text-gray-600 mb-2">
                   EMAIL
                 </label>
@@ -354,14 +518,18 @@ export default function Home() {
                 <input
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) =>
+                    setEmail(e.target.value)
+                  }
                   placeholder="nama@email.com"
                   autoComplete="email"
                   className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:bg-white focus:border-black focus:ring-2 focus:ring-black/5 transition"
                 />
+
               </div>
 
               <div>
+
                 <label className="block text-xs font-semibold text-gray-600 mb-2">
                   PASSWORD
                 </label>
@@ -369,7 +537,9 @@ export default function Home() {
                 <input
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) =>
+                    setPassword(e.target.value)
+                  }
                   placeholder="••••••••"
                   autoComplete={
                     authMode === 'login'
@@ -378,6 +548,7 @@ export default function Home() {
                   }
                   className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:bg-white focus:border-black focus:ring-2 focus:ring-black/5 transition"
                 />
+
               </div>
 
               <button
@@ -416,6 +587,7 @@ export default function Home() {
           </p>
 
         </div>
+
       </main>
     )
   }
@@ -431,250 +603,332 @@ export default function Home() {
 
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-5 sm:py-8">
 
-        {/* HEADER */}
-    <div className="sticky top-0 z-30 bg-[#f7f8fc] pt-1 pb-2">
+        {/* HEADER + PROGRESS STICKY */}
 
-        <header className="flex items-center justify-between mb-6">
+        <div className="sticky top-0 z-30 bg-[#f7f8fc] pt-1 pb-2">
 
-          {/* CUSTOM PART MENU */}
- 
-          <div className="relative">
+          {/* HEADER */}
 
-            <p className="text-[10px] tracking-[0.2em] font-bold text-gray-400 mb-2">
-              MASTER KANJI
-            </p>
+          <header className="flex items-center justify-between mb-6">
 
-            <button
-              onClick={() => setShowParts(!showParts)}
-              className="group flex items-center gap-3 bg-white border border-gray-200 rounded-2xl px-4 py-2.5 shadow-sm hover:shadow-md hover:border-gray-300 active:scale-[0.98] transition-all"
-            >
+            {/* CUSTOM PART MENU */}
 
-              <div className="w-9 h-9 rounded-xl bg-black text-white flex items-center justify-center text-sm font-bold">
-                {part.replace('part', '')}
-              </div>
+            <div className="relative">
 
-              <div className="text-left">
+              <p className="text-[10px] tracking-[0.2em] font-bold text-gray-400 mb-2">
+                MASTER KANJI
+              </p>
 
-                <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
-                  Bagian
-                </p>
-
-                <p className="text-base font-bold leading-tight">
-                  {part.replace('part', '')}
-                </p>
-
-              </div>
-
-              <span
-                className={`ml-2 text-gray-400 transition-transform duration-300 ${
-                  showParts ? 'rotate-180' : ''
-                }`}
+              <button
+                onClick={() =>
+                  setShowParts(!showParts)
+                }
+                className="group flex items-center gap-3 bg-white border border-gray-200 rounded-2xl px-4 py-2.5 shadow-sm hover:shadow-md hover:border-gray-300 active:scale-[0.98] transition-all"
               >
-                ↓
-              </span>
 
-            </button>
+                <div className="w-9 h-9 rounded-xl bg-black text-white flex items-center justify-center text-sm font-bold">
+                  {part.replace(
+                    'part',
+                    ''
+                  )}
+                </div>
 
-            {/* DROPDOWN */}
+                <div className="text-left">
 
-            {showParts && (
-              <>
-                <div
-                  className="fixed inset-0 z-30"
-                  onClick={() => setShowParts(false)}
-                />
+                  <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
+                    Bagian
+                  </p>
 
-                <div className="absolute z-40 top-full left-0 mt-3 w-[280px] sm:w-[310px] bg-white rounded-3xl border border-gray-100 shadow-2xl shadow-black/10 p-2 animate-[dropdownIn_.22s_ease-out]">
+                  <p className="text-base font-bold leading-tight">
+                    {part.replace(
+                      'part',
+                      ''
+                    )}
+                  </p>
 
-                  <div className="px-4 pt-3 pb-2">
+                </div>
 
-                    <p className="text-xs font-bold text-gray-900">
-                      Pilih Bagian
-                    </p>
+                <span
+                  className={`ml-2 text-gray-400 transition-transform duration-300 ${
+                    showParts
+                      ? 'rotate-180'
+                      : ''
+                  }`}
+                >
+                  ↓
+                </span>
 
-                    <p className="text-[11px] text-gray-400 mt-1">
-                      Pilih materi kanji yang ingin dipelajari
-                    </p>
+              </button>
 
-                  </div>
+              {/* DROPDOWN */}
 
-                  <div className="max-h-[330px] overflow-y-auto px-1 pb-1">
+              {showParts && (
+                <>
 
-                    {Object.keys(kanjiData).map((p, index) => {
+                  <div
+                    className="fixed inset-0 z-30"
+                    onClick={() =>
+                      setShowParts(false)
+                    }
+                  />
 
-                      const cards = allParts[p] || []
+                  <div className="absolute z-40 top-full left-0 mt-3 w-[280px] sm:w-[310px] bg-white rounded-3xl border border-gray-100 shadow-2xl shadow-black/10 p-2 animate-[dropdownIn_.22s_ease-out]">
 
-                      const learned = mastered.filter((m) =>
-                        m.startsWith(`${p}-`)
-                      ).length
+                    <div className="px-4 pt-3 pb-2">
 
-                      const percentage =
-                        cards.length > 0
-                          ? Math.round(
-                              (learned / cards.length) * 100
-                            )
-                          : 0
+                      <p className="text-xs font-bold text-gray-900">
+                        Pilih Bagian
+                      </p>
 
-                      const selected = p === part
+                      <p className="text-[11px] text-gray-400 mt-1">
+                        Pilih materi kanji yang ingin dipelajari
+                      </p>
 
-                      return (
-                        <button
-                          key={p}
-                          onClick={() => changePart(p)}
-                          className={`w-full flex items-center gap-3 p-3 rounded-2xl text-left transition-all duration-200 ${
-                            selected
-                              ? 'bg-black text-white'
-                              : 'hover:bg-gray-50 text-gray-900'
-                          }`}
-                        >
+                    </div>
 
-                          {/* NUMBER */}
+                    <div className="max-h-[330px] overflow-y-auto px-1 pb-1">
 
-                          <div
-                            className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0 ${
-                              selected
-                                ? 'bg-white/15 text-white'
-                                : 'bg-gray-100 text-gray-700'
-                            }`}
-                          >
-                            {index + 1}
-                          </div>
+                      {Object.keys(
+                        kanjiData
+                      ).map(
+                        (p, index) => {
 
-                          {/* INFO */}
+                          const cards =
+                            allParts[p] ||
+                            []
 
-                          <div className="flex-1 min-w-0">
+                          const learned =
+                            mastered.filter(
+                              (m) =>
+                                m.startsWith(
+                                  `${p}-`
+                                )
+                            ).length
 
-                            <div className="flex items-center justify-between">
+                          const percentage =
+                            cards.length > 0
+                              ? Math.round(
+                                  (learned /
+                                    cards.length) *
+                                    100
+                                )
+                              : 0
 
-                              <p className="font-bold text-sm">
-                                Bagian {index + 1}
-                              </p>
+                          const selected =
+                            p === part
 
-                              {percentage === 100 && (
-                                <span
-                                  className={
-                                    selected
-                                      ? 'text-green-300'
-                                      : 'text-green-500'
-                                  }
-                                >
-                                  ✓
-                                </span>
-                              )}
-
-                            </div>
-
-                            <div className="flex items-center gap-2 mt-1">
-
-                              <p
-                                className={`text-[10px] ${
-                                  selected
-                                    ? 'text-white/50'
-                                    : 'text-gray-400'
-                                }`}
-                              >
-                                {learned} / {cards.length} hafal
-                              </p>
-
-                            </div>
-
-                            {/* MINI PROGRESS */}
-
-                            <div
-                              className={`h-1 rounded-full mt-2 overflow-hidden ${
+                          return (
+                            <button
+                              key={p}
+                              onClick={() =>
+                                changePart(
+                                  p
+                                )
+                              }
+                              className={`w-full flex items-center gap-3 p-3 rounded-2xl text-left transition-all duration-200 ${
                                 selected
-                                  ? 'bg-white/10'
-                                  : 'bg-gray-100'
+                                  ? 'bg-black text-white'
+                                  : 'hover:bg-gray-50 text-gray-900'
                               }`}
                             >
 
+                              {/* NUMBER */}
+
                               <div
-                                className={`h-full rounded-full transition-all duration-500 ${
+                                className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0 ${
                                   selected
-                                    ? 'bg-white'
-                                    : 'bg-black'
+                                    ? 'bg-white/15 text-white'
+                                    : 'bg-gray-100 text-gray-700'
                                 }`}
-                                style={{
-                                  width: `${percentage}%`,
-                                }}
-                              />
+                              >
+                                {index + 1}
+                              </div>
 
-                            </div>
+                              {/* INFO */}
 
-                          </div>
+                              <div className="flex-1 min-w-0">
 
-                          {/* ARROW */}
+                                <div className="flex items-center justify-between">
 
-                          <span
-                            className={`text-sm ${
-                              selected
-                                ? 'text-white/50'
-                                : 'text-gray-300'
-                            }`}
-                          >
-                            ›
-                          </span>
+                                  <p className="font-bold text-sm">
+                                    Bagian{' '}
+                                    {index +
+                                      1}
+                                  </p>
 
-                        </button>
-                      )
-                    })}
+                                  {percentage ===
+                                    100 && (
+                                    <span
+                                      className={
+                                        selected
+                                          ? 'text-green-300'
+                                          : 'text-green-500'
+                                      }
+                                    >
+                                      ✓
+                                    </span>
+                                  )}
+
+                                </div>
+
+                                <div className="flex items-center gap-2 mt-1">
+
+                                  <p
+                                    className={`text-[10px] ${
+                                      selected
+                                        ? 'text-white/50'
+                                        : 'text-gray-400'
+                                    }`}
+                                  >
+                                    {learned}{' '}
+                                    /{' '}
+                                    {
+                                      cards.length
+                                    }{' '}
+                                    hafal
+                                  </p>
+
+                                </div>
+
+                                {/* MINI PROGRESS */}
+
+                                <div
+                                  className={`h-1 rounded-full mt-2 overflow-hidden ${
+                                    selected
+                                      ? 'bg-white/10'
+                                      : 'bg-gray-100'
+                                  }`}
+                                >
+
+                                  <div
+                                    className={`h-full rounded-full transition-all duration-500 ${
+                                      selected
+                                        ? 'bg-white'
+                                        : 'bg-black'
+                                    }`}
+                                    style={{
+                                      width: `${percentage}%`,
+                                    }}
+                                  />
+
+                                </div>
+
+                              </div>
+
+                              {/* ARROW */}
+
+                              <span
+                                className={`text-sm ${
+                                  selected
+                                    ? 'text-white/50'
+                                    : 'text-gray-300'
+                                }`}
+                              >
+                                ›
+                              </span>
+
+                            </button>
+                          )
+                        }
+                      )}
+
+                    </div>
 
                   </div>
 
-                </div>
-              </>
-            )}
+                </>
+              )}
 
-          </div>
+            </div>
 
-          {/* LOGOUT */}
+            {/* LOGOUT */}
 
-          <button
-            onClick={logout}
-            className="px-4 py-2 rounded-full bg-white border border-gray-200 text-xs font-semibold text-gray-600 hover:text-black hover:border-gray-300 active:scale-95 transition"
-          >
-            Keluar
-          </button>
+            <button
+              onClick={logout}
+              className="px-4 py-2 rounded-full bg-white border border-gray-200 text-xs font-semibold text-gray-600 hover:text-black hover:border-gray-300 active:scale-95 transition"
+            >
+              Keluar
+            </button>
 
-        </header>
+          </header>
 
-        {/* PROGRESS */}
+          {/* PROGRESS */}
 
-        <section className="bg-white rounded-2xl border border-gray-100 p-4 mb-5 shadow-sm">
+          <section className="bg-white rounded-2xl border border-gray-100 p-4 mb-5 shadow-sm">
 
-          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between mb-2">
 
-            <span className="text-xs font-semibold text-gray-500">
-              Progress Bagian
-            </span>
+              <span className="text-xs font-semibold text-gray-500">
+                Progress Bagian
+              </span>
 
-            <span className="text-xs font-bold text-gray-900">
-              {
-                mastered.filter((m) =>
-                  m.startsWith(`${part}-`)
-                ).length
-              }{' '}
-              / {currentCards.length}
-            </span>
+              <span className="text-xs font-bold text-gray-900">
 
-          </div>
+                {
+                  mastered.filter(
+                    (m) =>
+                      m.startsWith(
+                        `${part}-`
+                      )
+                  ).length
+                }{' '}
 
-          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                / {allCurrentCards.length}
 
-            <div
-              className="h-full bg-black rounded-full transition-all duration-700 ease-out"
-              style={{
-                width: `${progress}%`,
-              }}
-            />
+              </span>
 
-          </div>
+            </div>
 
-        </section>
+            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+
+              <div
+                className="h-full bg-black rounded-full transition-all duration-700 ease-out"
+                style={{
+                  width: `${progress}%`,
+                }}
+              />
+
+            </div>
+
+          </section>
+
         </div>
+
+        {/* MODE INDICATOR */}
+
+        {unlearnedOnly && (
+          <div className="mb-4 flex items-center justify-between bg-black text-white rounded-2xl px-4 py-3">
+
+            <div>
+
+              <p className="text-xs font-bold">
+                MODE BELUM HAFAL
+              </p>
+
+              <p className="text-[10px] text-white/50 mt-0.5">
+                Hanya menampilkan kanji yang belum hafal
+              </p>
+
+            </div>
+
+            <button
+              onClick={() => {
+                setUnlearnedOnly(false)
+                setCardIndex(0)
+                setIsFlipped(false)
+              }}
+              className="text-xs font-semibold bg-white text-black px-3 py-2 rounded-xl active:scale-95 transition"
+            >
+              Semua
+            </button>
+
+          </div>
+        )}
+
         {/* CARD */}
 
         {currentKanji ? (
+
           <section
             className={
               changingPart
@@ -688,16 +942,22 @@ export default function Home() {
               style={{
                 perspective: '1200px',
               }}
-              onClick={() => setIsFlipped(!isFlipped)}
+              onClick={() =>
+                setIsFlipped(
+                  !isFlipped
+                )
+              }
             >
 
               <div
                 className="relative w-full h-full transition-transform duration-500 ease-out"
                 style={{
-                  transformStyle: 'preserve-3d',
-                  transform: isFlipped
-                    ? 'rotateY(180deg)'
-                    : 'rotateY(0deg)',
+                  transformStyle:
+                    'preserve-3d',
+                  transform:
+                    isFlipped
+                      ? 'rotateY(180deg)'
+                      : 'rotateY(0deg)',
                 }}
               >
 
@@ -706,14 +966,19 @@ export default function Home() {
                 <div
                   className="absolute inset-0 bg-white rounded-[27px] border border-gray-100 shadow-xl shadow-black/5 flex flex-col items-center justify-center p-8"
                   style={{
-                    backfaceVisibility: 'hidden',
+                    backfaceVisibility:
+                      'hidden',
                   }}
                 >
 
                   <div className="absolute top-6 left-6">
 
                     <span className="text-[10px] font-bold tracking-widest text-gray-300">
-                      {cardIndex + 1} / {currentCards.length}
+
+                      {cardIndex + 1}{' '}
+                      /{' '}
+                      {currentCards.length}
+
                     </span>
 
                   </div>
@@ -739,8 +1004,10 @@ export default function Home() {
                 <div
                   className="absolute inset-0 bg-black text-white rounded-[70px] shadow-xl flex flex-col items-center justify-center p-8"
                   style={{
-                    backfaceVisibility: 'hidden',
-                    transform: 'rotateY(180deg)',
+                    backfaceVisibility:
+                      'hidden',
+                    transform:
+                      'rotateY(180deg)',
                   }}
                 >
 
@@ -787,9 +1054,14 @@ export default function Home() {
             {/* CARD COUNTER */}
 
             <div className="text-center mt-4">
+
               <span className="text-xs text-gray-400">
-                {cardIndex + 1} dari {currentCards.length}
+
+                {cardIndex + 1} dari{' '}
+                {currentCards.length}
+
               </span>
+
             </div>
 
             {/* NAVIGATION */}
@@ -840,20 +1112,57 @@ export default function Home() {
             </button>
 
           </section>
+
         ) : (
+
           <div className="bg-white rounded-3xl p-10 text-center animate-[partEnter_.4s_ease-out]">
-            <p className="text-gray-500">
-              Belum ada data kanji pada bagian ini.
-            </p>
+
+            {unlearnedOnly ? (
+              <>
+                <div className="text-4xl mb-4">
+                  🎉
+                </div>
+
+                <p className="font-semibold text-gray-700">
+                  Semua kanji sudah hafal!
+                </p>
+
+                <p className="text-sm text-gray-400 mt-1">
+                  Tidak ada kartu yang tersisa.
+                </p>
+
+                <button
+                  onClick={() => {
+                    setUnlearnedOnly(false)
+                    setCardIndex(0)
+                    setIsFlipped(false)
+                  }}
+                  className="mt-5 bg-black text-white px-5 py-3 rounded-2xl text-sm font-semibold"
+                >
+                  Tampilkan Semua
+                </button>
+              </>
+            ) : (
+              <p className="text-gray-500">
+                Belum ada data kanji pada bagian ini.
+              </p>
+            )}
+
           </div>
+
         )}
 
         {/* BOTTOM MENU */}
 
         <div className="grid grid-cols-2 gap-3 mt-6">
 
+          {/* KOLEKSI */}
+
           <button
-            onClick={() => setShowCollection(true)}
+            onClick={() => {
+              setUnlearnedOnly(false)
+              setShowCollection(true)
+            }}
             className="bg-white border border-gray-200 rounded-2xl p-4 text-left hover:border-gray-300 hover:-translate-y-0.5 active:scale-[0.98] transition-all"
           >
 
@@ -871,24 +1180,34 @@ export default function Home() {
 
           </button>
 
+          {/* BELUM HAFAL */}
+
           <button
-            onClick={() => {
-              setCardIndex(0)
-              setIsFlipped(false)
-            }}
+            onClick={startUnlearnedMode}
             className="bg-white border border-gray-200 rounded-2xl p-4 text-left hover:border-gray-300 hover:-translate-y-0.5 active:scale-[0.98] transition-all"
           >
 
             <div className="text-lg mb-1">
-              ↺
+              🔄
             </div>
 
             <p className="font-bold text-sm">
-              Mulai Lagi
+              Belum Hafal
             </p>
 
             <p className="text-xs text-gray-400 mt-1">
-              Kembali ke kartu pertama
+
+              {
+                allCurrentCards.filter(
+                  (_, index) =>
+                    !mastered.includes(
+                      `${part}-${index}`
+                    )
+                ).length
+              }{' '}
+
+              kartu belum hafal
+
             </p>
 
           </button>
@@ -909,16 +1228,23 @@ export default function Home() {
 
       {/* COLLECTION MODAL */}
 
-     {showCollection && (
+      {showCollection && (
+
         <div
           className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-5 animate-[fadeIn_.2s_ease-out]"
-          onClick={() => setShowCollection(false)}
+          onClick={() =>
+            setShowCollection(false)
+          }
         >
 
           <div
             className="w-full max-w-2xl bg-white rounded-t-[30px] sm:rounded-[30px] h-[85vh] shadow-2xl flex flex-col overflow-hidden animate-[modalUp_.35s_cubic-bezier(.22,1,.36,1)]"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) =>
+              e.stopPropagation()
+            }
           >
+
+            {/* MODAL HEADER */}
 
             <div className="p-5 border-b border-gray-100 flex items-center justify-between">
 
@@ -935,7 +1261,9 @@ export default function Home() {
               </div>
 
               <button
-                onClick={() => setShowCollection(false)}
+                onClick={() =>
+                  setShowCollection(false)
+                }
                 className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 active:scale-90 transition"
               >
                 ✕
@@ -943,9 +1271,12 @@ export default function Home() {
 
             </div>
 
+            {/* COLLECTION CONTENT */}
+
             <div className="flex-1 min-h-0 overflow-y-auto p-5 overscroll-contain">
 
               {mastered.length === 0 ? (
+
                 <div className="py-16 text-center">
 
                   <div className="text-4xl mb-4">
@@ -961,32 +1292,48 @@ export default function Home() {
                   </p>
 
                 </div>
+
               ) : (
+
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
 
                   {mastered.map((id) => {
 
-                    const [savedPart, savedIndexString] =
-                      id.split('-')
+                    const [
+                      savedPart,
+                      savedIndexString,
+                    ] = id.split('-')
 
                     const savedIndex =
-                      Number(savedIndexString)
+                      Number(
+                        savedIndexString
+                      )
 
                     const cards =
-                      allParts[savedPart] || []
+                      allParts[
+                        savedPart
+                      ] || []
 
-                    const card = cards[savedIndex]
+                    const card =
+                      cards[savedIndex]
 
-                    if (!card) return null
+                    if (!card)
+                      return null
 
                     return (
+
                       <button
                         key={id}
                         onClick={() => {
+                          setUnlearnedOnly(false)
                           setPart(savedPart)
-                          setCardIndex(savedIndex)
+                          setCardIndex(
+                            savedIndex
+                          )
                           setIsFlipped(false)
-                          setShowCollection(false)
+                          setShowCollection(
+                            false
+                          )
                         }}
                         className="aspect-square bg-gray-50 border border-gray-100 rounded-2xl flex flex-col items-center justify-center hover:bg-gray-100 hover:scale-[1.02] active:scale-95 transition-all"
                       >
@@ -1000,10 +1347,12 @@ export default function Home() {
                         </span>
 
                       </button>
+
                     )
                   })}
 
                 </div>
+
               )}
 
             </div>
@@ -1011,64 +1360,90 @@ export default function Home() {
           </div>
 
         </div>
+
       )}
 
       {/* ANIMATION STYLE */}
 
       <style jsx global>{`
+
         @keyframes dropdownIn {
+
           from {
             opacity: 0;
-            transform: translateY(-8px) scale(0.96);
+            transform:
+              translateY(-8px)
+              scale(0.96);
           }
 
           to {
             opacity: 1;
-            transform: translateY(0) scale(1);
+            transform:
+              translateY(0)
+              scale(1);
           }
+
         }
 
         @keyframes partEnter {
+
           from {
             opacity: 0;
-            transform: translateY(14px) scale(0.985);
+            transform:
+              translateY(14px)
+              scale(0.985);
           }
 
           to {
             opacity: 1;
-            transform: translateY(0) scale(1);
+            transform:
+              translateY(0)
+              scale(1);
           }
+
         }
 
         @keyframes partExit {
+
           from {
             opacity: 1;
-            transform: translateY(0) scale(1);
+            transform:
+              translateY(0)
+              scale(1);
           }
 
           to {
             opacity: 0;
-            transform: translateY(-10px) scale(0.985);
+            transform:
+              translateY(-10px)
+              scale(0.985);
           }
+
         }
 
         @keyframes pop {
+
           0% {
             opacity: 0;
-            transform: scale(0.5);
+            transform:
+              scale(0.5);
           }
 
           70% {
-            transform: scale(1.15);
+            transform:
+              scale(1.15);
           }
 
           100% {
             opacity: 1;
-            transform: scale(1);
+            transform:
+              scale(1);
           }
+
         }
 
         @keyframes fadeIn {
+
           from {
             opacity: 0;
           }
@@ -1076,19 +1451,27 @@ export default function Home() {
           to {
             opacity: 1;
           }
+
         }
 
         @keyframes modalUp {
+
           from {
             opacity: 0;
-            transform: translateY(30px) scale(0.98);
+            transform:
+              translateY(30px)
+              scale(0.98);
           }
 
           to {
             opacity: 1;
-            transform: translateY(0) scale(1);
+            transform:
+              translateY(0)
+              scale(1);
           }
+
         }
+
       `}</style>
 
     </main>
