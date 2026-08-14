@@ -1174,7 +1174,7 @@ export default function Home() {
         <footer className="text-center mt-8 pb-5">
 
           <p className="text-[10px] tracking-widest text-gray-300 font-semibold">
-            MASTER KANJI N3
+            MASTER KANJI N3 @by DIMAS M
           </p>
 
         </footer>
