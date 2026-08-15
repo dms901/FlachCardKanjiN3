@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, type FormEvent } from 'react'
-import { kanjiData } from '.../data/kanjiData'
+import { kanjiData } from '../data/kanjiData'
 import { useAuth } from './AuthProvider'
 
 export default function KanjiApp() {
